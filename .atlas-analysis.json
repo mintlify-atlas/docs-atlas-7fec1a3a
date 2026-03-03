@@ -1,0 +1,132 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Simple Vulnerability Manager",
+  "projectDescription": "Automated vulnerability analysis tool with integrated scanners and report generation",
+  "theme": "aspen",
+  "primaryColor": "#dc2626",
+  "lightColor": "#ef4444",
+  "darkColor": "#991b1b",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/project-management",
+              "features/vulnerability-database",
+              "features/report-generation"
+            ]
+          },
+          {
+            "group": "Scanners",
+            "pages": [
+              "scanners/web-scanners",
+              "scanners/service-scanners",
+              "scanners/mobile-tools",
+              "scanners/information-tools"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/settings",
+              "configuration/scanner-integration",
+              "configuration/templates"
+            ]
+          },
+          {
+            "group": "Help",
+            "pages": [
+              "help/faq",
+              "help/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Scripts Reference",
+        "groups": [
+          {
+            "group": "Web Scanners",
+            "pages": [
+              "scripts/acunetix",
+              "scripts/burpsuite",
+              "scripts/netsparker",
+              "scripts/arachni"
+            ]
+          },
+          {
+            "group": "Service Scanners",
+            "pages": [
+              "scripts/nessus",
+              "scripts/openvas",
+              "scripts/qualys",
+              "scripts/nmap"
+            ]
+          },
+          {
+            "group": "Mobile Analysis",
+            "pages": [
+              "scripts/apktool",
+              "scripts/mobsf",
+              "scripts/qark",
+              "scripts/androbugs"
+            ]
+          },
+          {
+            "group": "Information Gathering",
+            "pages": [
+              "scripts/recon-ng",
+              "scripts/eyewitness"
+            ]
+          },
+          {
+            "group": "Utilities",
+            "pages": [
+              "scripts/install-tools",
+              "scripts/update-scripts"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Vulnerability database with Web, Service, Static, and Mobile scanners",
+    "Project management with custom comments and screenshots",
+    "One-click integration with popular security scanning tools",
+    "Automated report generation with Word templates",
+    "Multi-language support (English, Spanish, Russian)",
+    "Batch and shell scripts for automated scanning workflows"
+  ],
+  "publicApiSurface": [
+    "acunetix_scan.bat",
+    "nessus_scan.bat",
+    "openvas_scan.bat",
+    "openvas_scan_remote.sh",
+    "qualys_scan.bat",
+    "nmap_scan.bat",
+    "nmap_scan_remote.bat",
+    "burpsuite_scan.bat",
+    "arachni_scan_remote.bat",
+    "mobsf.bat",
+    "qark.bat",
+    "qark.sh",
+    "apktool_decode_local.bat",
+    "apktool_decode_remote.bat",
+    "recon_ng_remote.bat",
+    "EyeWitness_remote.bat",
+    "install_upgrade_tools_local.bat",
+    "install_upgrade_tools_remoto.sh"
+  ]
+}
