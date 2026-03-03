@@ -1,0 +1,321 @@
+---
+title: Nmap Scripts
+description: Network scanning and port enumeration using Nmap locally and remotely
+---
+
+## Overview
+
+The Nmap scripts perform comprehensive network scanning and port enumeration. They support local Windows execution and remote Linux scanning via SSH, generating detailed HTML reports.
+
+## nmap_scan.bat
+
+Executes Nmap scans locally on Windows systems.
+
+### Parameters
+
+<ParamField path="Proyecto" type="string" required>
+  Project name for the scan
+</ParamField>
+
+<ParamField path="IP" type="string" required>
+  Target IP addresses (comma-separated for multiple targets)
+</ParamField>
+
+<ParamField path="Timestamp" type="string" required>
+  Timestamp for unique file naming
+</ParamField>
+
+<ParamField path="Documentacion" type="string" required>
+  Output directory for reports
+</ParamField>
+
+<ParamField path="AppExe" type="string" required>
+  Path to nmap.exe executable
+</ParamField>
+
+### Usage
+
+```batch
+nmap_scan.bat "MyProject" "192.168.1.100" "20240315_143000" "C:\Reports" "C:\Program Files\Nmap\nmap.exe"
+```
+
+**Multiple targets:**
+```batch
+nmap_scan.bat "Network Audit" "192.168.1.1,192.168.1.100,192.168.1.254" "20240315_143000" "C:\Reports" "nmap.exe"
+```
+
+### Nmap Command
+
+The script executes the following Nmap command:
+
+```batch
+echo 192.168.1.100 | nmap -Pn -O --system-dns -vv -sS -sC -sV \
+  -oA "C:\Reports\NmapReport - 20240315_143000" \
+  -pT:1-65535,U:7,9,13,17,19,21,37,53,67-69,98,111,121,123,135,137-138,161,... \
+  --webxml -iL -
+```
+
+### Scan Options Explained
+
+| Option | Description |
+|--------|-------------|
+| `-Pn` | Skip host discovery (assume host is up) |
+| `-O` | Enable OS detection |
+| `--system-dns` | Use system DNS resolver |
+| `-vv` | Very verbose output |
+| `-sS` | TCP SYN scan (stealth scan) |
+| `-sC` | Run default NSE scripts |
+| `-sV` | Version detection for services |
+| `-oA` | Output in all formats (XML, nmap, gnmap) |
+| `--webxml` | Generate XML suitable for web display |
+| `-iL -` | Read targets from stdin |
+
+### Port Ranges
+
+Comprehensive port scanning configuration:
+
+**TCP Ports:** Full range 1-65535
+
+**UDP Ports:** Common service ports
+
+<Accordion title="View complete UDP port list">
+  7 (Echo), 9 (Discard), 13 (Daytime), 17 (QOTD), 19 (CHARGEN), 21 (FTP), 37 (Time), 53 (DNS), 67-69 (DHCP/TFTP), 98 (Linuxconf), 111 (RPC), 121 (ERPC), 123 (NTP), 135 (MS RPC), 137-138 (NetBIOS), 161 (SNMP), 177 (XDMCP), 371 (ClearCase), 389 (LDAP), 407 (Timbuktu), 445 (SMB), 456 (MACON), 464 (Kerberos), 500 (ISAKMP), 512 (biff), 514 (syslog), 517-518 (talk), 520 (RIP), 555 (phAse Zero), 635 (RLZ DBase), 666 (Doom), 858 (pftp), 1001 (JtoMB), 1010-1011 (surf), 1015 (SUPDUP), 1024-1049 (Reserved), 1051-1055 (Kerberos), 1170 (AT&T MeTV), 1194 (OpenVPN), 1243 (SubSeven), 1245 (VoiceChat), 1434 (MS SQL Monitor), 1492 (Trojan), 1600 (issd), 1604 (DarkComet), 1645 (RADIUS), 1701 (L2TP), 1807 (FJI), 1812 (RADIUS), 1900 (SSDP), 1978 (UniSQL), 1981 (PersistentMQ), 1999 (SubSeven), 2001-2002 (DC), 2023 (xinuexpansion), 2049 (NFS), 2115 (KDM), 2140 (DeepThroat), 2801 (IGMP), 2967 (SSC-Agent), 3024 (NDS_SSS), 3129 (Master's Paradise), 3150 (Deep Throat), 3283 (Net Assistant), 3527 (VERITAS), 3700 (Portal of Doom), 3801 (EAP over UDP), 4000 (ICQ), 4092 (WorkSpaceAudio), 4156 (Stat Scanner), 4569 (IAX), 4590 (RID), 4781 (Kazaa), 5000-5001 (UPnP), 5036 (MenandMice), 5060 (SIP), 5321 (Firewall), 5400-5402 (Excerpt), 5503 (fcp-addr-srvr1), 5569 (rdmnet-ctrl), 5632 (pcANYWHERE), 5742 (Netvision), 6051 (X11), 6073 (DirectPlay8), 6502 (BoKS), 6670 (VocalTec), 6771 (BackWeb), 6912 (Mach), 6969 (acmsoda), 7000 (AOL), 7111 (Somfy), 7222 (unknown), 7300-7301 (swx), 7306-7308 (swx), 7778 (Unreal), 7789 (office), 7938 (LGTOMAPPER), 9872-9875 (Session Announcement), 9989 (iNIC), 10067 (Portal of Doom), 10167 (Portal of Doom), 11000 (IRISA), 11223 (Prism Deploy), 12223 (TrustedWeb), 12345-12346 (NetBus), 12361-12362 (Whack-a-mole), 15253 (Hydap), 15345 (XPCom), 16969 (unknown), 17185 (Soundsvirtual), 20001 (Millennium), 20034 (NetBus 2 Pro), 21544 (Schxxob), 21862 (unknown), 22222 (Prosiak), 23456 (EvilFTP), 26274 (Delta Source), 26409 (unknown), 27444 (Trinoo), 30029 (AOL Admin), 31335 (Trinoo), 31337-31339 (Back Orifice), 31666 (BOWhack), 31785 (Hack'a'Tack), 31789 (Hack'a'Tack), 31791-31792 (Hack'a'Tack), 32771 (Solaris RPC), 33333 (Prosiak), 34324 (BigGluck), 40412 (The Spy), 40421-40423 (Master Paradise), 40426 (Master Paradise), 47262 (Delta), 50505 (Socket de Troie), 50766 (Fore), 51100-51101 (InfoMaN), 51109 (Adleman), 53001 (Remote Shutdown), 54321 (School Bus), 61466 (TeleCommando)
+</Accordion>
+
+### Report Generation
+
+Nmap generates XML output which is transformed to HTML:
+
+```batch
+xml.exe tr nmap.xsl "C:\Reports\NmapReport - 20240315_143000.xml" > "C:\Reports\NmapReport - 20240315_143000.html"
+```
+
+The script uses an XSL stylesheet (`nmap.xsl`) to convert Nmap XML to formatted HTML.
+
+### Output Files
+
+| File | Description |
+|------|-------------|
+| `NmapReport - {Timestamp}.xml` | Raw XML scan results (deleted after conversion) |
+| `NmapReport - {Timestamp}.html` | Formatted HTML report |
+| `NmapReport - {Timestamp}.nmap` | Nmap native format |
+| `NmapReport - {Timestamp}.gnmap` | Grepable format |
+
+### IP Address Handling
+
+The script processes IP addresses:
+
+```batch
+set IP=%IP:"=%       rem Remove quotes
+set IP=%IP:,= %      rem Convert commas to spaces
+```
+
+Pipes to Nmap via stdin:
+```batch
+echo 192.168.1.1 192.168.1.100 192.168.1.254 | nmap ... -iL -
+```
+
+---
+
+## nmap_scan_remote.bat
+
+Executes Nmap scans on remote Linux servers via SSH.
+
+### Parameters
+
+<ParamField path="Proyecto" type="string" required>
+  Project name
+</ParamField>
+
+<ParamField path="IP" type="string" required>
+  Target IP addresses (comma-separated)
+</ParamField>
+
+<ParamField path="Timestamp" type="string" required>
+  Unique timestamp
+</ParamField>
+
+<ParamField path="Documentacion" type="string" required>
+  Local output directory
+</ParamField>
+
+<ParamField path="Server" type="string" required>
+  Remote Linux server hostname/IP
+</ParamField>
+
+<ParamField path="Username" type="string" required>
+  SSH username
+</ParamField>
+
+<ParamField path="Password" type="string" required>
+  SSH password
+</ParamField>
+
+### Usage
+
+```batch
+nmap_scan_remote.bat "MyProject" "192.168.1.100" "20240315_143000" "C:\Reports" "scanner.company.com" "root" "password"
+```
+
+### Prerequisites
+
+Remote server requirements:
+```bash
+apt-get install nmap
+```
+
+### Remote Execution Workflow
+
+1. **SSH Connection** - Connect to remote server via plink
+2. **Execute Nmap** - Run scan on remote server
+3. **File Transfer** - Download XML results via pscp
+4. **Local Conversion** - Transform XML to HTML locally
+5. **Cleanup** - Remove remote temporary files
+
+### SSH Command Execution
+
+**Run Nmap remotely:**
+```batch
+plink.exe -no-antispoof -ssh -P 22 -l root -pw password -C scanner.company.com \
+  "echo 192.168.1.100 | nmap -Pn -O --system-dns -vv -sS -sC -sV \
+  -oX '/tmp/NmapReport - 20240315_143000.xml' \
+  -pT:1-65535,U:7,9,13,17,19,... --webxml -iL - "
+```
+
+### File Transfer
+
+**Download results:**
+```batch
+pscp.exe -P 22 -l root -pw password -C \
+  scanner.company.com:"/tmp/NmapReport - 20240315_143000.xml" \
+  "%TEMP%\NmapReport - 20240315_143000.xml"
+
+pscp.exe -P 22 -l root -pw password -C \
+  scanner.company.com:"/tmp/NmapReport - 20240315_143000.xml" \
+  "C:\Reports\NmapReport - 20240315_143000.xml"
+```
+
+**Remove remote files:**
+```batch
+plink.exe -no-antispoof -ssh -P 22 -l root -pw password -C \
+  scanner.company.com "rm -f '/tmp/NmapReport - 20240315_143000.xml'"
+```
+
+### Local vs Remote Comparison
+
+<Tabs>
+  <Tab title="Local (nmap_scan.bat)">
+    **Execution:**
+    ```batch
+    echo 192.168.1.100 | nmap.exe [options] -iL -
+    ```
+    
+    **Advantages:**
+    - Direct execution
+    - No network dependencies
+    - Faster for local networks
+    
+    **Requirements:**
+    - Nmap installed on Windows
+    - Administrator privileges
+    - Direct network access to targets
+  </Tab>
+  
+  <Tab title="Remote (nmap_scan_remote.bat)">
+    **Execution:**
+    ```batch
+    plink.exe -ssh server "echo 192.168.1.100 | nmap [options] -iL -"
+    ```
+    
+    **Advantages:**
+    - Scan from different network segment
+    - Leverage Linux Nmap capabilities
+    - Centralized scanning infrastructure
+    
+    **Requirements:**
+    - SSH access to remote server
+    - Nmap installed on remote server
+    - plink.exe and pscp.exe (PuTTY tools)
+  </Tab>
+</Tabs>
+
+### SSH Tools Used
+
+**plink.exe** - PuTTY Link (SSH client)
+```batch
+plink.exe -no-antispoof -ssh -P 22 -l username -pw password -C server "command"
+```
+
+Options:
+- `-no-antispoof` - Skip host key verification prompt
+- `-ssh` - Use SSH protocol
+- `-P 22` - SSH port
+- `-l username` - Login username
+- `-pw password` - Password authentication
+- `-C` - Enable compression
+
+**pscp.exe** - PuTTY Secure Copy
+```batch
+pscp.exe -P 22 -l username -pw password -C server:remotefile localfile
+```
+
+### HTML Report Display
+
+Both scripts automatically open the HTML report:
+
+```batch
+echo "C:\Reports\NmapReport - 20240315_143000.html"
+start "" /WAIT /I """C:\Reports\NmapReport - 20240315_143000.html"""
+```
+
+### XSL Transformation
+
+The `nmap.xsl` stylesheet formats the XML into a styled HTML report with:
+- Host discovery summary
+- Open ports table
+- Service versions
+- OS detection results
+- NSE script output
+- Scan statistics
+
+### Cleanup
+
+**Local script:**
+```batch
+del /F "%DocumentacionXML%"
+```
+
+**Remote script:**
+```batch
+del /F "%TEMP%\%DocumentacionXML%"
+plink.exe ... "rm -f '/tmp/%DocumentacionXML%'"
+```
+
+### Network Access Patterns
+
+**Local Scan:**
+```
+Windows Client --[Nmap]--> Target Network
+```
+
+**Remote Scan:**
+```
+Windows Client --[SSH]--> Linux Scanner --[Nmap]--> Target Network
+```
+
+### Common Use Cases
+
+**Internal Network Audit:**
+```batch
+nmap_scan.bat "Internal Audit" "10.0.0.0/24" "20240315_143000" "C:\Audits" "nmap.exe"
+```
+
+**DMZ Scanning from Jump Server:**
+```batch
+nmap_scan_remote.bat "DMZ Scan" "203.0.113.10,203.0.113.20" "20240315_143000" "C:\Reports" "jumpbox.company.com" "scanuser" "password"
+```
+
+**Multiple Target Enumeration:**
+```batch
+nmap_scan.bat "Server Survey" "192.168.1.10,192.168.1.20,192.168.1.30,192.168.1.40" "20240315_143000" "C:\Results" "nmap.exe"
+```

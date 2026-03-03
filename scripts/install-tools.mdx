@@ -1,0 +1,721 @@
+---
+title: 'Tool Installation Scripts'
+description: 'Automated installation and upgrade scripts for security testing tools on Windows and Linux platforms'
+---
+
+## Overview
+
+SVM provides installation scripts for setting up security testing tools on both local Windows systems and remote Linux systems. These scripts automate the download, installation, and configuration of various security tools.
+
+## Scripts
+
+### Windows Local Installation
+
+**Script:** `install_upgrade_tools_local.bat`
+
+Installs tools on Windows systems.
+
+### Linux Remote Installation
+
+**Scripts:**
+- `install_upgrade_tools_remoto.bat` (Windows wrapper)
+- `install_upgrade_tools_remoto.sh` (Linux installation script)
+
+Installs tools on remote Linux systems via SSH.
+
+## Supported Platforms
+
+<Tabs>
+<Tab title="Linux">
+
+- **Kali Linux** - Full support
+- **Debian** - Full support  
+- **Ubuntu** - Full support
+- **Windows 10 Ubuntu** - WSL (Windows Subsystem for Linux)
+
+</Tab>
+<Tab title="Windows">
+
+- **Windows 10** - Direct installation
+- **Windows Server** - Compatible versions
+
+</Tab>
+</Tabs>
+
+## Tool Categories
+
+### Web Scanning Tools
+
+#### Arachni
+
+Web application security scanner framework.
+
+**Platforms:** Linux (Kali, Debian, Ubuntu)
+
+**Dependencies:**
+- libsqlite3-dev
+- libpq-dev
+- postgresql-server-dev-10
+- default-libmysqlclient-dev
+- curl, libcurl3, libcurl4-openssl-dev
+
+**Ruby Gems:**
+- watir-webdriver
+- watir
+- selenium-webdriver
+- arachni-reactor
+- arachni-rpc
+
+**Installation:**
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh Arachni
+```
+
+### Information Gathering Tools
+
+#### Recon-ng
+
+OSINT reconnaissance framework.
+
+**Platforms:** Linux (Kali, Debian, Ubuntu)
+
+**Dependencies:**
+- dos2unix
+- libxml2-dev
+- libxslt1-dev
+- zlib1g-dev
+- Python packages (from REQUIREMENTS file)
+
+**Installation:**
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh Recon-ng
+```
+
+**Repository:**
+```bash
+git clone https://bitbucket.org/LaNMaSteR53/recon-ng
+cd recon-ng
+pip install -r REQUIREMENTS
+```
+
+#### EyeWitness
+
+Web application screenshot and reconnaissance tool.
+
+**Platforms:** Linux (Kali, Debian, Ubuntu)
+
+**Dependencies:**
+- python-levenshtein
+- selenium==2.53.6 (specific version)
+
+**Installation:**
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh EyeWitness
+```
+
+**Setup:**
+```bash
+git clone https://github.com/ChrisTruncer/EyeWitness
+cd EyeWitness/setup
+./setup.sh
+```
+
+### Service Scanning Tools
+
+#### OpenVAS
+
+Comprehensive vulnerability scanner.
+
+**Platforms:** Linux (Kali, Debian, Ubuntu)
+
+**Core Dependencies:**
+- sqlite3, xsltproc
+- texlive-latex-base
+- texlive-latex-extra
+- texlive-fonts-recommended
+- alien
+
+**Scanning Tools:**
+- nmap
+- nikto
+- ike-scan
+- lsof
+- pnscan
+- netdiag
+- ldapscripts
+- dirmngr
+- hydra
+
+**Installation:**
+
+<Tabs>
+<Tab title="Kali Linux">
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh OpenVAS
+
+# Kali packages
+apt-get install openvas openvas-manager openvas-manager-common \
+  openvas-cli openvas-scanner libopenvas9 \
+  greenbone-security-assistant greenbone-security-assistant-common
+
+# Setup
+openvas-setup
+```
+
+</Tab>
+<Tab title="Ubuntu/Debian">
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh OpenVAS
+
+# Add PPA repository
+add-apt-repository ppa:mrazavi/openvas
+apt-get update
+
+# Install packages
+apt-get install openvas9
+apt-get install greenbone-security-assistant9
+```
+
+</Tab>
+</Tabs>
+
+**Default Credentials:**
+```text
+Username: admin
+Password: OpenVAS
+```
+
+**Post-Installation:**
+
+The script automatically configures remote access:
+- Detects server IP address
+- Updates Greenbone Security Assistant to listen on IP
+- Creates default admin user
+- Sets default password
+
+#### OpenVAS Plugin Updates
+
+Keep OpenVAS vulnerability definitions current.
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh OpenVASPlugins
+```
+
+**Updates:**
+- greenbone-certdata-sync
+- greenbone-nvt-sync
+- greenbone-scapdata-sync
+- openvas-feed-update
+
+#### Nessus Plugin Updates
+
+Update Nessus vulnerability plugins.
+
+**Platforms:** Linux (where Nessus is installed)
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh NessusPlugins
+```
+
+**Command:**
+```bash
+/opt/nessus/sbin/nessuscli update --plugins-only
+```
+
+#### Nmap
+
+Network scanner and service detection tool.
+
+**Platforms:** Linux, Windows
+
+<Tabs>
+<Tab title="Linux">
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh Nmap
+
+# Installs Nmap and updates script database
+apt-get install nmap
+nmap --script-updatedb
+```
+
+</Tab>
+<Tab title="Windows">
+
+```batch
+install_upgrade_tools_local.bat Nmap 0
+
+# Downloads Nmap 7.70 installer
+# Installs to: %~dp0tools\nmap\
+```
+
+</Tab>
+</Tabs>
+
+### Development Tools
+
+#### Java JDK
+
+Java Development Kit for running Java-based tools.
+
+**Platforms:** Linux
+
+**Installation:**
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh Java
+```
+
+**Packages Installed:**
+- openjdk-9-jdk (preferred)
+- openjdk-8-jdk (fallback)
+
+**Verification:**
+```bash
+java -version
+```
+
+### Mobile Security Tools
+
+#### Android SDK
+
+Android development and testing tools.
+
+**Platforms:** Linux
+
+**Dependencies:**
+- android-tools-adb
+
+**Installation:**
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh AndroidSDK
+```
+
+**Downloads:**
+- android-sdk_r24.4.1-linux.tgz
+
+**Post-Install:**
+```bash
+cd ~/androidsdk/android-sdk-linux
+tools/android update sdk --no-ui
+```
+
+#### Apktool
+
+APK decompilation and recompilation tool.
+
+**Platforms:** Linux, Windows
+
+<Tabs>
+<Tab title="Linux">
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh ApkTools
+
+# Downloads latest version from BitBucket
+# Installs to: ~/apktool/
+```
+
+</Tab>
+<Tab title="Windows">
+
+```batch
+install_upgrade_tools_local.bat Apktool 0
+
+# Downloads apktool_2.4.0.jar
+# Installs to: tools\apktool\apktool.jar
+```
+
+</Tab>
+</Tabs>
+
+#### UberApkSigner
+
+APK signing tool.
+
+**Platforms:** Windows
+
+```batch
+install_upgrade_tools_local.bat UberApkSigner 0
+
+# Downloads uber-apk-signer-1.0.0.jar
+# Installs to: tools\uber-apk-signer\
+```
+
+#### JD-GUI
+
+Java decompiler with GUI.
+
+**Platforms:** Windows
+
+```batch
+install_upgrade_tools_local.bat Jdgui 0
+
+# Downloads:
+# - jd-gui-1.5.2.jar
+# - jd-gui-windows-1.5.2.zip
+# Installs to: tools\jdgui\
+```
+
+#### Enjarify
+
+DEX to JAR converter.
+
+**Platforms:** Linux, Windows
+
+<Tabs>
+<Tab title="Linux">
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh Enjarify
+
+git clone https://github.com/Storyyeller/enjarify
+cd enjarify
+```
+
+</Tab>
+<Tab title="Windows">
+
+```batch
+install_upgrade_tools_local.bat Enjarify 0
+
+# Downloads enjarify-1.0.3.zip
+# Manual extraction required
+```
+
+</Tab>
+</Tabs>
+
+#### Drozer
+
+Android security assessment framework.
+
+**Platforms:** Linux
+
+**Dependencies:**
+- protobuf-compiler
+- dex2jar
+- python-setuptools
+- python-yaml
+- python-service-identity
+- pyopenssl
+
+**Installation:**
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh Drozer
+
+git clone https://github.com/mwrlabs/drozer
+cd drozer
+make
+python setup.py build
+python setup.py install
+```
+
+#### QARK
+
+Quick Android Review Kit.
+
+**Platforms:** Linux
+
+**Installation:**
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh Qark
+
+git clone https://github.com/linkedin/qark
+cd qark
+pip install -r requirements.txt
+python ./setup.py install
+```
+
+**Dependencies:**
+- Android SDK tools
+- Python requirements from requirements.txt
+
+#### MobSF
+
+Mobile Security Framework.
+
+**Platforms:** Linux
+
+**Dependencies:**
+- libffi-dev
+- libtiff5-dev, libjpeg8-dev, libjpeg62-dev, libjpeg62-turbo-dev
+- zlib1g-dev
+- libfreetype6, libfreetype6-dev
+- liblcms2-dev
+- libwebp-dev
+- tcl8.6-dev, tk8.6-dev
+- python-tk
+- libssl-dev
+- wkhtmltopdf
+- python3-django-wkhtmltopdf
+- python3-venv
+
+**Python Packages:**
+- scrapy
+- cryptography
+- cffi
+- pycparser
+- colorlog
+
+**Installation:**
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh MobSF
+
+git clone https://github.com/ajinabraham/Mobile-Security-Framework-MobSF
+cd Mobile-Security-Framework-MobSF
+pip install -r requirements.txt --upgrade
+./setup.sh
+```
+
+#### AndroBugs Framework
+
+Android vulnerability scanner.
+
+**Platforms:** Linux
+
+**Installation:**
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh AndroBugs_Framework
+
+git clone https://github.com/AndroBugs/AndroBugs_Framework
+```
+
+### Utility Tools
+
+#### GreenShot
+
+Screenshot utility.
+
+**Platforms:** Windows
+
+```batch
+install_upgrade_tools_local.bat GreenShot 0
+
+# Opens download page in browser
+```
+
+## Usage
+
+### Windows Local Installation
+
+<CodeGroup>
+
+```batch Basic Usage
+install_upgrade_tools_local.bat <Tool> <UsoProxy> [ProxyIP] [ProxyPort] [ProxyUser] [ProxyPassword]
+```
+
+```batch Without Proxy
+install_upgrade_tools_local.bat Nmap 0
+```
+
+```batch With Proxy
+install_upgrade_tools_local.bat Apktool 1 proxy.company.com 8080 user password
+```
+
+</CodeGroup>
+
+**Parameters:**
+- `Tool` - Tool name to install
+- `UsoProxy` - Use proxy (0=No, 1=Yes)
+- `ProxyIP` - Proxy server IP
+- `ProxyPort` - Proxy port
+- `ProxyUser` - Proxy username
+- `ProxyPassword` - Proxy password
+
+### Linux Remote Installation
+
+<CodeGroup>
+
+```batch Windows Wrapper
+install_upgrade_tools_remoto.bat <Server> <Username> <Password> <Tool>
+```
+
+```batch Example
+install_upgrade_tools_remoto.bat 192.168.1.100 root password Recon-ng
+```
+
+```bash Direct Linux
+sudo ./install_upgrade_tools_remoto.sh <Tool>
+```
+
+```bash Install All Tools
+sudo ./install_upgrade_tools_remoto.sh Todas
+```
+
+</CodeGroup>
+
+**Special Tool Names:**
+- `Todas` - Install all available tools (Linux only)
+
+## Installation Workflow
+
+### Remote Installation Process
+
+1. **Upload Script** - Transfers .sh script to /tmp/ on remote system
+2. **Format Conversion** - Removes Windows line endings (tr -d '\15\32')
+3. **Permission Setting** - Makes script executable (chmod 755)
+4. **Execution** - Runs with sudo if needed
+5. **Cleanup** - Removes temporary script files
+
+### Environment Setup
+
+The Linux script configures:
+
+```bash
+export TERM=linux
+export DEBIAN_FRONTEND="noninteractive"
+```
+
+This ensures:
+- Non-interactive installation
+- No prompts during package installation
+- Headless operation suitable for automation
+
+### Root Check
+
+```bash
+userid=`id -u`
+if [ "${userid}" != '0' ]; then
+  echo '[Error]: You must run this setup script with root privileges.'
+  exit 1
+fi
+```
+
+## WSL (Windows Subsystem for Linux) Setup
+
+For Windows 10 Ubuntu or Kali WSL:
+
+```bash
+# Install SSH server
+sudo apt-get install openssh-server
+
+# Generate SSH keys
+cd /etc/ssh/
+sudo /usr/bin/ssh-keygen -A
+
+# Configure SSH
+sudo nano /etc/ssh/sshd_config
+# Add: ListenAddress 0.0.0.0
+
+# Start SSH service
+sudo service ssh --full-restart
+sudo update-rc.d ssh enable
+```
+
+### Passwordless Sudo (Optional)
+
+```bash
+sudo visudo
+# Add: username ALL=(ALL) NOPASSWD: ALL
+```
+
+## Common Dependencies
+
+All Linux installations include:
+
+```bash
+apt-get update
+apt-get install -y \
+  git wget \
+  python python3 python3-dev python3-pip python3-dugong \
+  python-pip python-dev \
+  build-essential \
+  ruby ruby-dev rubygems-integration rubygems \
+  python-setuptools \
+  gcc gawk original-awk \
+  xmlstarlet \
+  unzip
+```
+
+## Troubleshooting
+
+### Permission Denied
+
+**Issue:** Script execution fails with permission error
+
+**Solution:**
+```bash
+chmod 755 install_upgrade_tools_remoto.sh
+sudo ./install_upgrade_tools_remoto.sh <Tool>
+```
+
+### Package Installation Failures
+
+**Issue:** apt-get fails to install packages
+
+**Solution:**
+```bash
+# Update package lists
+sudo apt-get update
+
+# Fix broken dependencies
+sudo apt-get -f install
+
+# Retry installation
+```
+
+### Git Clone Failures
+
+**Issue:** Git repository already exists
+
+**Solution:**
+The scripts handle this automatically:
+```bash
+if [ $? -ne 0 ] ; then
+  cd tool-directory
+  git pull
+else
+  # Fresh clone
+fi
+```
+
+### OpenVAS Remote Access
+
+**Issue:** Cannot access OpenVAS web interface remotely
+
+**Solution:**
+The script automatically configures this, but manual fix:
+
+```bash
+# Edit service file
+nano /lib/systemd/system/greenbone-security-assistant.service
+
+# Change:
+--listen=127.0.0.1
+
+# To:
+--listen=0.0.0.0
+
+# Reload and restart
+systemctl daemon-reload
+/etc/init.d/greenbone-security-assistant restart
+```
+
+## References
+
+- [Arachni Repository](https://github.com/Arachni/arachni)
+- [Recon-ng Repository](https://bitbucket.org/LaNMaSteR53/recon-ng)
+- [EyeWitness Repository](https://github.com/ChrisTruncer/EyeWitness)
+- [OpenVAS Documentation](https://www.openvas.org/)
+- [MobSF Repository](https://github.com/MobSF/Mobile-Security-Framework-MobSF)
+
+## Notes
+
+- All Linux installations use `apt-get` package manager
+- Scripts support both fresh installations and updates
+- Windows installations download directly from official sources
+- Some tools require manual extraction after download
+- Plugin/feed updates should be run after initial installation
+- Installation requires active internet connection
+- Proxy support available for Windows local installations

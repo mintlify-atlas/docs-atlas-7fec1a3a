@@ -1,0 +1,274 @@
+---
+title: Application Settings
+description: Configure Simple Vulnerability Manager preferences, interface language, and application behavior
+---
+
+Simple Vulnerability Manager (SVM) provides comprehensive configuration options to customize your vulnerability analysis workflow. This guide covers all application settings and preferences.
+
+## Language Configuration
+
+SVM supports three interface languages with full Unicode support (added in version 2.1.0).
+
+### Supported Languages
+
+- **English** - Full interface translation
+- **Spanish (Español)** - Complete localization
+- **Russian (Русский)** - Full translation support
+
+<Steps>
+  <Step title="Change Interface Language">
+    Navigate to the main menu and select your preferred language from the language selector. The interface will immediately update to display all menus, dialogs, and messages in the selected language.
+  </Step>
+  
+  <Step title="Verify Language Files">
+    SVM uses language-specific INI files to store localized settings:
+    - `svm_en.ini` - English configuration
+    - `svm_es.ini` - Spanish configuration  
+    - `svm_rus.ini` - Russian configuration
+  </Step>
+  
+  <Step title="Restart if Needed">
+    Most language changes take effect immediately. If you experience any display issues, restart the application.
+  </Step>
+</Steps>
+
+<Note>
+The Unicode support introduced in version 2.1.0 enables proper display of special characters across all languages, including Cyrillic and accented characters.
+</Note>
+
+## Standalone and Professional Versions
+
+The SVM executable name is associated with its INI configuration file, allowing you to run both Standalone and Professional versions simultaneously.
+
+### Version Configuration
+
+You can maintain separate configurations by naming your executables differently:
+
+- `svm.exe` → uses `svm.ini`
+- `svm_pro.exe` → uses `svm_pro.ini`
+- `svm_standalone.exe` → uses `svm_standalone.ini`
+
+<Note>
+This feature was introduced in version 2.1.0, enabling consultants to maintain separate environments for different clients or projects.
+</Note>
+
+## Connection Settings (SVM Pro)
+
+The Professional version includes server connection capabilities for multi-user collaboration.
+
+### Server Configuration
+
+<Steps>
+  <Step title="Access Connection Settings">
+    Navigate to **Options** → **Connection Configuration** (Configuración de Conexión)
+  </Step>
+  
+  <Step title="Configure Server Details">
+    Enter the following connection parameters:
+    
+    - **Server**: Hostname or IP address (e.g., `svm.myddns.me`)
+    - **Port**: Server port number (default: `8444`)
+    - **Token**: Authentication token for your organization
+  </Step>
+  
+  <Step title="Test Connection">
+    Click the test connection button to verify connectivity before saving.
+  </Step>
+</Steps>
+
+### Demo Server Access
+
+You can try SVM Pro features using the demo server:
+
+```
+Server: svm.myddns.me
+Port: 8444
+Token: svm_demo
+```
+
+<Note>
+Version 2.0.2 introduced encrypted and compressed data transmission between server and clients for enhanced security and performance.
+</Note>
+
+<Warning>
+Connection settings require proper network configuration. If using SVM with Wine on Linux/MacOS, ensure your network adapter is properly configured. Connection handling was improved for Wine compatibility in version 2.1.0.
+</Warning>
+
+## Update Settings
+
+SVM includes automatic update detection and download capabilities.
+
+### Version Checking
+
+<Steps>
+  <Step title="Automatic Version Detection">
+    SVM automatically checks for new versions on startup (introduced in version 2.1.0).
+  </Step>
+  
+  <Step title="Manual Update Check">
+    Navigate to **Tools** → **Check for Updates** to manually verify if a newer version is available.
+  </Step>
+  
+  <Step title="Download Updates">
+    When a new version is detected, SVM will prompt you to visit the download page at [github.com/simplevulnerabilitymanager/svm/releases](https://github.com/simplevulnerabilitymanager/svm/releases)
+  </Step>
+</Steps>
+
+### Script and Tool Updates
+
+Update internal scripts and tools independently from the main application:
+
+<Steps>
+  <Step title="Access Update Tools Menu">
+    Navigate to **Tools** → **Update Scripts and Tools**
+  </Step>
+  
+  <Step title="Download Latest Scripts">
+    The update function downloads the latest open-source scripts from the SVM repository.
+  </Step>
+  
+  <Step title="Verify Update">
+    Check the console output to confirm all scripts were successfully updated.
+  </Step>
+</Steps>
+
+<Note>
+All Windows (.bat) and Linux (.sh) scripts are open source under GPL license and can be updated independently from the main application.
+</Note>
+
+## Text Field Capacity
+
+Version 2.1.0 significantly expanded text field capacity for better documentation:
+
+- **IP addresses**: Extended capacity for multiple IPs and ranges
+- **Web URLs**: Support for lengthy URLs and query parameters
+- **Notes**: Expanded comment fields for detailed observations
+- **Request/Response**: Increased capacity for full HTTP traffic logs
+
+## Bug Reports and Feature Requests
+
+SVM includes an integrated feedback system for reporting issues and suggesting improvements.
+
+### Using the BugIdeas Window
+
+<Steps>
+  <Step title="Access BugIdeas">
+    Open the BugIdeas window from the **Help** menu to report errors or suggest new features.
+  </Step>
+  
+  <Step title="Describe Your Issue or Idea">
+    Enter a detailed description in the comment field. The vertical scrollbar (fixed in version 2.0.3) allows for lengthy descriptions.
+  </Step>
+  
+  <Step title="Submit Feedback">
+    Click Submit to send your feedback directly to the development team.
+  </Step>
+</Steps>
+
+<Note>
+You can also email feedback to [contacto@simplevulnerabilitymanager.com](mailto:contacto@simplevulnerabilitymanager.com)
+</Note>
+
+## Database Management
+
+### Backup Configuration
+
+<Steps>
+  <Step title="Access Backup Options">
+    Navigate to **Database** → **Backup** to create a backup of your local vulnerability database.
+  </Step>
+  
+  <Step title="Select Backup Location">
+    Choose a secure location for your backup file. Backups include all projects, vulnerabilities, and configurations.
+  </Step>
+  
+  <Step title="Verify Backup">
+    The backup process creates a complete copy of your database. Verify the file was created successfully.
+  </Step>
+</Steps>
+
+<Warning>
+The backup error in Wine (version 2.0.2 and earlier) has been fixed in version 2.0.3. Ensure you're using the latest version for reliable backups on Linux/MacOS.
+</Warning>
+
+## Window and Control Behavior
+
+### Display Settings
+
+- **Window Resizing**: Controls automatically adjust when resizing the main window
+- **Zoom Functionality**: OWASP Mobile section supports zoom controls that properly restore to normal view
+- **Multiple Instances**: Running multiple instances of svm.exe is supported, with proper cleanup on exit (fixed for Wine in version 2.0.3)
+
+<Note>
+Control positioning issues when resizing windows were resolved in version 2.0.2, ensuring a consistent user experience.
+</Note>
+
+## Microsoft Office Integration
+
+SVM requires Microsoft Office for report generation capabilities.
+
+### Office Requirements
+
+- **Microsoft Word**: Required for generating Word reports
+- **Microsoft Excel**: Required for exporting project lists and vulnerability data
+
+<Warning>
+If Microsoft Word or Excel is not installed, SVM will display clear error messages when attempting to generate reports or export data. Ensure Office is properly installed and activated.
+</Warning>
+
+### Word Template Handling
+
+When double-clicking a template in configuration (version 2.0.0+):
+- Opens the actual template file for editing in Word
+- Previously opened a new document based on the template
+- Changes are saved directly to the template
+
+## Proxy Configuration
+
+For users behind corporate firewalls or requiring proxy access:
+
+### Qualys Proxy Settings
+
+Configure proxy settings for Qualys scanner connections:
+
+```
+Proxy IP: [Your proxy server]
+Proxy Port: [Proxy port number]
+Proxy User: [Authentication username]
+Proxy Password: [Authentication password]
+```
+
+The system supports:
+- Basic proxy authentication
+- NTLM authentication (--proxy-anyauth)
+- Automatic proxy detection
+
+## Configuration File Location
+
+All settings are stored in INI files in the SVM installation directory. The active configuration file matches the executable name:
+
+- Executable: `svm.exe` → Configuration: `svm.ini`
+- Executable: `svm_pro.exe` → Configuration: `svm_pro.ini`
+
+<Note>
+A clean configuration template is available as `svm_virgen.ini` for creating new configurations from scratch.
+</Note>
+
+## License Configuration
+
+SVM is available in two licensing modes:
+
+### Freeware License
+- Personal use only
+- Full feature access for individual security analysts
+- No server/multi-user features
+
+### Professional License
+- Commercial use authorized
+- Multi-user server capabilities
+- Encrypted client-server communication
+- Team collaboration features
+
+<Warning>
+The freeware version should only be used for personal purposes. Commercial use requires purchasing a Professional license. Contact [contacto@simplevulnerabilitymanager.com](mailto:contacto@simplevulnerabilitymanager.com) for licensing information.
+</Warning>

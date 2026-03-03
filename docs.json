@@ -1,122 +1,116 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Simple Vulnerability Manager",
+  "theme": "aspen",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#dc2626",
+    "light": "#ef4444",
+    "dark": "#991b1b"
   },
-  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/simplevulnerabilitymanager/svm"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/simplevulnerabilitymanager/svm"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "introduction",
+              "installation",
+              "quickstart"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Features",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "features/project-management",
+              "features/vulnerability-database",
+              "features/report-generation"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Scanners",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "scanners/web-scanners",
+              "scanners/service-scanners",
+              "scanners/mobile-tools",
+              "scanners/information-tools"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Configuration",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "configuration/settings",
+              "configuration/scanner-integration",
+              "configuration/templates"
+            ]
+          },
+          {
+            "group": "Help",
+            "pages": [
+              "help/faq",
+              "help/troubleshooting"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Scripts Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Web Scanners",
             "pages": [
-              "api-reference/introduction"
+              "scripts/acunetix",
+              "scripts/burpsuite",
+              "scripts/netsparker",
+              "scripts/arachni"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Service Scanners",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "scripts/nessus",
+              "scripts/openvas",
+              "scripts/qualys",
+              "scripts/nmap"
+            ]
+          },
+          {
+            "group": "Mobile Analysis",
+            "pages": [
+              "scripts/apktool",
+              "scripts/mobsf",
+              "scripts/qark",
+              "scripts/androbugs"
+            ]
+          },
+          {
+            "group": "Information Gathering",
+            "pages": [
+              "scripts/recon-ng",
+              "scripts/eyewitness"
+            ]
+          },
+          {
+            "group": "Utilities",
+            "pages": [
+              "scripts/install-tools",
+              "scripts/update-scripts"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

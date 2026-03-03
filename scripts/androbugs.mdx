@@ -1,0 +1,449 @@
+---
+title: AndroBugs Framework Script
+description: Automated Android vulnerability analysis with severity classification
+---
+
+The AndroBugs Framework script performs automated security analysis of Android APK files on remote Linux servers, generating detailed text reports with vulnerability classifications and severity ratings.
+
+## Overview
+
+**Script**: `androbugs_framework.bat`
+
+**Platform**: Windows (SSH client for remote Linux execution)
+
+**Purpose**: Automated Android APK security analysis with detailed vulnerability reporting
+
+## Tool Information
+
+**AndroBugs Framework**: Android Security Analysis Tool
+
+- **Developer**: AndroBugs Team
+- **Repository**: `https://github.com/AndroBugs/AndroBugs_Framework`
+- **Type**: Efficient Android vulnerability scanner
+- **Language**: Python
+- **Output**: Text-based vulnerability reports with severity ratings
+
+### Installation
+
+From install scripts (Linux):
+
+```bash
+cd ~
+git clone --depth 1 https://github.com/AndroBugs/AndroBugs_Framework
+cd AndroBugs_Framework
+```
+
+No additional dependencies required - uses standard Python libraries.
+
+## Script Parameters
+
+```batch
+androbugs_framework.bat <PathAPK> <FileApk> <Timestamp> <Documentacion> <DirApp> <Server> <Username> <Password>
+```
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `PathAPK` | Local path to APK file | `C:\samples\app.apk` |
+| `FileApk` | APK filename (no extension) | `app` |
+| `Timestamp` | Unique timestamp identifier | `20230615_143022` |
+| `Documentacion` | Local output directory | `C:\reports` |
+| `DirApp` | AndroBugs directory on server | `/root/AndroBugs_Framework` |
+| `Server` | SSH server hostname/IP | `192.168.1.100` |
+| `Username` | SSH username | `root` |
+| `Password` | SSH password | `password123` |
+
+## Analysis Workflow
+
+<Steps>
+  <Step title="Create Temp Directory">
+    Creates timestamped directory on remote server for analysis.
+    
+    ```batch
+    plink.exe -P 22 -ssh -l %Username% -pw %Password% -C %Server% ^
+      "mkdir '/tmp/%Timestamp%'"
+    ```
+  </Step>
+  
+  <Step title="Upload APK">
+    Transfers APK file to remote temporary directory.
+    
+    ```batch
+    pscp.exe -l %Username% -pw %Password% -C "%PathAPK%" ^
+      %Server%:"/tmp/%Timestamp%/%FileApk%_%Timestamp%.apk"
+    ```
+  </Step>
+  
+  <Step title="Execute Analysis">
+    Runs AndroBugs Framework with specified parameters.
+    
+    ```bash
+    cd '/root/AndroBugs_Framework'
+    python ./androbugs.py \
+      -f '/tmp/20230615_143022/app_20230615_143022.apk' \
+      -e 2 \
+      -o '/tmp/20230615_143022'
+    ```
+    
+    Analysis is performed directly on the server.
+  </Step>
+  
+  <Step title="Download Report">
+    Transfers generated text report back to local machine.
+    
+    ```batch
+    pscp.exe -P 22 -l %Username% -pw %Password% -C ^
+      %Server%:"/tmp/%Timestamp%/*.txt" %Documentacion%
+    ```
+  </Step>
+  
+  <Step title="Cleanup">
+    Removes temporary directory and files from server.
+    
+    ```batch
+    plink.exe -P 22 -ssh -l %Username% -pw %Password% -C %Server% ^
+      "rm -f '/tmp/%Timestamp%/'"
+    ```
+  </Step>
+</Steps>
+
+## Script Implementation
+
+```batch
+@echo off
+setlocal
+set PathAPK=%1
+set FileApk=%2
+set Timestamp=%3
+set Documentacion=%4
+set DirApp=%5
+set Server=%6
+set Username=%7
+set Password=%8
+
+set PathAPK=%PathAPK:"=%
+set FileApk=%FileApk:"=%
+set DirApp=%DirApp:"=%
+set Documentacion=%Documentacion:"=%
+set Documentacion="%Documentacion%\AndroBugs_Framework - %FileApk%_%Timestamp%.txt"
+
+@title=[AndroBugs_Framework] - %FileApk%
+
+# Create temp directory
+"%~dp0plink.exe" -P 22 -ssh -l %Username% -pw %Password% -C %Server% ^
+  "mkdir '/tmp/%Timestamp%'"
+
+# Upload APK
+"%~dp0pscp.exe" -l %Username% -pw %Password% -C "%PathAPK%" ^
+  %Server%:"/tmp/%Timestamp%/%FileApk%_%Timestamp%.apk"
+
+# Run analysis
+"%~dp0plink.exe" -P 22 -ssh -l %Username% -pw %Password% -C %Server% ^
+  "cd '%DirApp%' ; python ./androbugs.py -f '/tmp/%Timestamp%/%FileApk%_%Timestamp%.apk' -e 2 -o '/tmp/%Timestamp%'"
+
+# Download report
+"%~dp0pscp.exe" -P 22 -l %Username% -pw %Password% -C ^
+  %Server%:"/tmp/%Timestamp%/*.txt" %Documentacion%
+
+# Cleanup
+"%~dp0plink.exe" -P 22 -ssh -l %Username% -pw %Password% -C %Server% ^
+  "rm -f '/tmp/%Timestamp%/'"
+
+echo %Documentacion%
+pause
+```
+
+## Command Line Options
+
+### AndroBugs Parameters
+
+```bash
+python ./androbugs.py -f <APK_PATH> -e <EFFICIENCY_MODE> -o <OUTPUT_DIR>
+```
+
+| Option | Description | Value in Script |
+|--------|-------------|-----------------|
+| `-f` | Path to APK file to analyze | `/tmp/<Timestamp>/<FileApk>_<Timestamp>.apk` |
+| `-e` | Efficiency mode (analysis depth) | `2` (Standard mode) |
+| `-o` | Output directory for report | `/tmp/<Timestamp>` |
+
+### Efficiency Modes
+
+| Mode | Description | Analysis Speed | Detail Level |
+|------|-------------|----------------|--------------|
+| `1` | Fast mode | Fastest | Basic checks only |
+| `2` | Standard mode | Balanced | Comprehensive analysis |
+| `3` | Deep mode | Slowest | Maximum detail |
+
+The script uses mode `2` for balanced performance and coverage.
+
+## Report Format
+
+### Text Report Structure
+
+The generated report contains:
+
+```
+[INFO] APK Information
+[INFO] Package Name: com.example.app
+[INFO] Version: 1.0
+[INFO] Min SDK: 21
+[INFO] Target SDK: 30
+
+[CRITICAL] Critical Vulnerabilities
+- Exported components without permission
+- Hardcoded cryptographic keys
+
+[WARNING] Security Warnings  
+- Debug mode enabled
+- Backup allowed
+
+[NOTICE] Security Notices
+- Uses external storage
+- Network communication detected
+
+[INFO] Information Items
+- Certificate details
+- Permissions list
+```
+
+### Severity Levels
+
+| Level | Color | Description |
+|-------|-------|-------------|
+| `CRITICAL` | Red | Immediate security risks requiring urgent fixes |
+| `WARNING` | Yellow | Security issues that should be addressed |
+| `NOTICE` | Blue | Potential security concerns to review |
+| `INFO` | White | Informational findings, no direct risk |
+
+## Vulnerability Categories
+
+AndroBugs Framework checks for:
+
+### Critical Issues
+
+- **SSL/TLS Security**: Certificate validation, hostname verification
+- **Cryptography**: Weak algorithms, hardcoded keys, ECB mode usage
+- **WebView Security**: JavaScript injection, file access vulnerabilities
+- **Database Security**: Unencrypted SQLite databases
+- **Code Injection**: Dynamic code loading, reflection abuse
+
+### Warnings
+
+- **Exported Components**: Unprotected activities, services, receivers
+- **Debug Features**: Debuggable flag, logging sensitive data
+- **Backup Security**: Android backup enabled for sensitive apps
+- **External Storage**: Writing sensitive data to SD card
+- **Permissions**: Dangerous permission usage
+
+### Notices
+
+- **Network Communication**: HTTP usage, clear-text traffic
+- **Third-party Libraries**: Known vulnerable library versions
+- **Code Obfuscation**: ProGuard/R8 configuration analysis
+- **Content Providers**: SQL injection vulnerabilities
+
+### Information
+
+- **Certificate Details**: Signing certificate information
+- **Permissions List**: All requested permissions
+- **Components**: Application components inventory
+- **API Usage**: Sensitive API calls detected
+
+## Output Location
+
+### Report File Naming
+
+```
+<Documentacion>\AndroBugs_Framework - <FileApk>_<Timestamp>.txt
+```
+
+Example:
+```
+C:\reports\AndroBugs_Framework - vulnerable_app_20230615_143022.txt
+```
+
+### Report Contents Example
+
+```text
+====================================================================================
+AndroBugs Framework Report
+====================================================================================
+
+[INFO] APK Path: /tmp/20230615_143022/vulnerable_app_20230615_143022.apk
+[INFO] Package Name: com.example.vulnerable
+[INFO] Version Code: 1
+[INFO] Version Name: 1.0
+[INFO] Min SDK: 21
+[INFO] Target SDK: 30
+
+====================================================================================
+[CRITICAL] <SSL_Security> SSL Implementation Checking
+====================================================================================
+Severity: CRITICAL
+
+The app uses SSL/TLS connection but does not properly verify the server certificate.
+
+This may allow attackers to perform Man-in-the-Middle attacks.
+
+Files:
+- com/example/vulnerable/NetworkManager.java
+
+====================================================================================
+[WARNING] <Hacker_Debug_Mode> Debug Mode Checking
+====================================================================================
+Severity: WARNING
+
+The application is debuggable. This allows attackers to easily inspect and modify
+the app's behavior at runtime.
+
+AndroidManifest.xml:
+- android:debuggable="true"
+
+====================================================================================
+```
+
+## Usage Example
+
+```batch
+androbugs_framework.bat ^
+  "C:\samples\vulnerable_app.apk" ^
+  "vulnerable_app" ^
+  "20230615_143022" ^
+  "C:\reports" ^
+  "/root/AndroBugs_Framework" ^
+  "192.168.1.100" ^
+  "root" ^
+  "password123"
+```
+
+## Comparison with Other Tools
+
+| Feature | AndroBugs | MobSF | QARK |
+|---------|-----------|-------|------|
+| Output Format | Text | PDF | HTML |
+| Exploit Generation | No | No | Yes |
+| Analysis Speed | Fast | Medium | Slow |
+| Report Detail | High | Very High | High |
+| Server Required | Yes | Yes | Yes |
+| Automation Friendly | Excellent | Good | Good |
+
+## Performance Characteristics
+
+- **Analysis Time**: 2-5 minutes for typical APK
+- **Large APKs**: 10-15 minutes for complex applications
+- **Resource Usage**: Lightweight compared to MobSF/QARK
+- **Network Transfer**: Minimal (APK upload + text report download)
+
+## Troubleshooting
+
+### Python Not Found
+
+```
+python: command not found
+```
+
+**Solution**: Install Python on remote server:
+
+```bash
+apt-get install python python-pip -y
+```
+
+### Script Not Found
+
+```
+python: can't open file './androbugs.py': [Errno 2] No such file or directory
+```
+
+**Solution**: Verify AndroBugs Framework installation:
+
+```bash
+cd /root
+git clone --depth 1 https://github.com/AndroBugs/AndroBugs_Framework
+ls -la AndroBugs_Framework/androbugs.py
+```
+
+### Directory Already Exists
+
+If timestamp directory already exists:
+
+```bash
+# Manual cleanup
+ssh root@192.168.1.100
+rm -rf /tmp/20230615_143022
+```
+
+### Permission Denied
+
+```
+mkdir: cannot create directory '/tmp/20230615_143022': Permission denied
+```
+
+**Solution**: Ensure SSH user has write permissions to `/tmp/`:
+
+```bash
+chmod 1777 /tmp
+```
+
+### Report Download Failed
+
+If report file not found:
+
+- Check analysis completed successfully
+- Verify output path in `-o` parameter
+- Look for Python errors in SSH output
+
+## Advanced Usage
+
+### Custom Analysis Mode
+
+Modify script to use deep analysis:
+
+```batch
+# Change -e 2 to -e 3 in script
+python ./androbugs.py -f '/tmp/%Timestamp%/%FileApk%_%Timestamp%.apk' -e 3 -o '/tmp/%Timestamp%'
+```
+
+### Multiple APK Analysis
+
+Batch process multiple APKs:
+
+```batch
+for %%f in (C:\samples\*.apk) do (
+  androbugs_framework.bat "%%f" "%%~nf" "%date:~-4%%date:~3,2%%date:~0,2%_%%time:~0,2%%%%time:~3,2%%%%time:~6,2%%" ^
+    "C:\reports" "/root/AndroBugs_Framework" "192.168.1.100" "root" "password123"
+)
+```
+
+### Parse Report for CI/CD
+
+Extract critical findings:
+
+```batch
+findstr /C:"[CRITICAL]" "AndroBugs_Framework - app_20230615_143022.txt"
+
+# Exit with error if critical issues found
+findstr /C:"[CRITICAL]" "report.txt" && exit 1
+```
+
+## Integration with SVM
+
+AndroBugs Framework integrates with Simple Vulnerability Manager:
+
+1. **Automated Scanning**: Called from SVM web interface
+2. **Report Storage**: Results stored in project documentation folder
+3. **Centralized Management**: All mobile app scans tracked in SVM database
+4. **Timestamp Tracking**: Unique identifiers for version comparison
+
+## Security Considerations
+
+- **Credentials**: Script uses plain-text SSH passwords
+- **Network**: Ensure SSH traffic is on secure network
+- **Data Protection**: Reports may contain sensitive app information
+- **Cleanup**: Temporary files automatically removed from server
+- **Access Control**: Restrict access to report files
+
+## Related Scripts
+
+- `mobsf.bat`: PDF-based comprehensive mobile security analysis
+- `qark.bat`: HTML reports with exploit generation
+- `apktool_decode_local.bat`: Manual code review and modification

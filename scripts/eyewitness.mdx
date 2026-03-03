@@ -1,0 +1,292 @@
+---
+title: 'EyeWitness Remote Scanner'
+description: 'Web application screenshot and reconnaissance tool for visual analysis of web services'
+---
+
+## Overview
+
+The `EyeWitness_remote.bat` script automates web application reconnaissance using EyeWitness. It captures screenshots of web applications, performs active scanning, and generates comprehensive visual reports of discovered web services on remote Linux systems.
+
+## Prerequisites
+
+- Remote Linux system with SSH access
+- EyeWitness installed on remote system
+- PuTTY tools (plink.exe, pscp.exe) on Windows
+- Python with Selenium dependencies on remote system
+
+## Usage
+
+```batch
+EyeWitness_remote.bat <Proyecto> <File> <Documentacion> <Timestamp> <DirApp> <Server> <Username> <Password>
+```
+
+### Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `Proyecto` | Project name |
+| `File` | Local file containing target URLs (one per line) |
+| `Documentacion` | Output directory path for reports |
+| `Timestamp` | Timestamp identifier for report files |
+| `DirApp` | EyeWitness installation directory on remote system |
+| `Server` | Remote server IP or hostname |
+| `Username` | SSH username |
+| `Password` | SSH password |
+
+### Example
+
+```batch
+EyeWitness_remote.bat "WebAudit" "C:\targets.txt" "C:\Reports" "20240315" "/root/EyeWitness" "192.168.1.100" "kali" "password"
+```
+
+## Input File Format
+
+Create a text file with one URL per line:
+
+```text
+http://example.com
+https://test.com:8443
+http://192.168.1.50
+https://internal.company.com/app
+```
+
+## EyeWitness Options
+
+The script executes EyeWitness with the following configuration:
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-f` | Input file | File containing target URLs |
+| `--web` | Enabled | Web application mode |
+| `--timeout` | 20 seconds | Request timeout |
+| `--threads` | 10 | Concurrent threads |
+| `--user-agent` | Chrome 41 | Custom user agent string |
+| `--prepend-https` | Enabled | Try HTTPS for all targets |
+| `--active-scan` | Enabled | Perform active scanning |
+| `--resolve` | Enabled | Resolve domain names |
+| `--no-prompt` | Enabled | Non-interactive mode |
+| `-d` | Output directory | Report destination |
+
+### User Agent
+
+```text
+Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.21 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.21
+```
+
+## Generated Reports
+
+The script generates a compressed archive containing:
+
+- **Screenshots** - PNG images of each web application
+- **HTML Report** - Interactive report with all findings
+- **Source Code** - HTML source of captured pages
+- **Report Data** - JSON/XML data files
+- **Categorization** - Applications grouped by technology
+
+Output file: `EyeWitnessReport_[Timestamp].tar.gz`
+
+## Workflow
+
+1. **File Upload** - Transfers target URL file to remote system
+2. **Directory Creation** - Creates temporary output directory
+3. **Script Generation** - Builds EyeWitness execution script
+4. **Execution** - Runs EyeWitness with configured options
+5. **Archiving** - Compresses report directory into tar.gz
+6. **Download** - Transfers archive to local documentation directory
+7. **Cleanup** - Removes temporary files from remote system
+
+## Installation
+
+### Remote System Setup
+
+Install EyeWitness on the remote Linux system:
+
+```bash
+git clone https://github.com/ChrisTruncer/EyeWitness
+cd EyeWitness/setup
+./setup.sh
+```
+
+The setup script installs:
+- Python dependencies
+- Selenium WebDriver
+- PhantomJS/Chrome drivers
+- Image processing libraries
+
+## Script Execution Details
+
+<CodeGroup>
+
+```batch Windows Script
+@echo off
+setlocal
+set Proyecto=%1
+set File=%2
+set Documentacion=%3
+set Timestamp=%4
+set DirApp=%5
+set Server=%6
+set Username=%7
+set Password=%8
+```
+
+```bash Remote Execution
+#!/bin/bash
+cd /root/EyeWitness
+chmod 755 EyeWitness.py
+
+./EyeWitness.py \
+  -f /tmp/EyeWitnessReport_20240315.txt \
+  --web \
+  --timeout 20 \
+  --threads 10 \
+  --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.21 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.21" \
+  --prepend-https \
+  --active-scan \
+  --resolve \
+  --no-prompt \
+  -d "/tmp/EyeWitnessReport_20240315/"
+```
+
+</CodeGroup>
+
+## Report Contents
+
+After extraction, the report directory contains:
+
+```text
+EyeWitnessReport_20240315/
+├── report.html               # Main HTML report
+├── screens/                  # Screenshot directory
+│   ├── http_example_com.png
+│   ├── https_test_com.png
+│   └── ...
+├── source/                   # HTML source files
+│   ├── http_example_com.txt
+│   └── ...
+├── categorized/             # Technology-based categorization
+│   ├── apache/
+│   ├── nginx/
+│   └── iis/
+└── databases/               # Data exports
+    ├── data.json
+    └── data.xml
+```
+
+## Active Scan Features
+
+When `--active-scan` is enabled, EyeWitness performs:
+
+- **Default Credentials** - Tests common username/password combinations
+- **Directory Enumeration** - Checks for common paths
+- **Technology Detection** - Identifies frameworks and platforms
+- **Vulnerability Indicators** - Flags potential security issues
+
+## Use Cases
+
+### Network Scanning Integration
+
+Combine with Nmap or other scanners:
+
+```bash
+# Nmap to find web services
+nmap -p 80,443,8080,8443 192.168.1.0/24 -oG - | \
+  grep open | awk '{print $2}' > targets.txt
+
+# Feed to EyeWitness
+EyeWitness_remote.bat "Scan" "targets.txt" "C:\Reports" ...
+```
+
+### Subdomain Reconnaissance
+
+Use with Recon-ng output:
+
+```bash
+# Use Recon-ng subdomain list
+# Format: Add http:// prefix to each subdomain
+cat recon-ngReport-Subdomains.txt | \
+  awk '{print "http://"$1}' > eyewitness-targets.txt
+```
+
+## Performance Tuning
+
+### Thread Configuration
+
+Adjust threads based on target count and network:
+
+```bash
+# Fast network, many targets
+--threads 20
+
+# Slow network or rate-limiting
+--threads 5
+```
+
+### Timeout Settings
+
+```bash
+# Fast-responding services
+--timeout 10
+
+# Slow or high-latency targets
+--timeout 30
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Selenium/WebDriver errors:**
+```bash
+# Reinstall EyeWitness
+cd EyeWitness/setup
+./setup.sh
+```
+
+**Screenshot failures:**
+```bash
+# Update Chrome/Chromium driver
+# Check EyeWitness documentation for latest drivers
+```
+
+**Memory issues with large scans:**
+```bash
+# Reduce threads
+--threads 5
+
+# Split target list into smaller batches
+split -l 100 targets.txt batch_
+```
+
+## Output Example
+
+The HTML report includes:
+
+- Visual thumbnails of all web applications
+- HTTP response headers
+- Server information
+- Certificate details (HTTPS)
+- Technology fingerprints
+- Categorization by server type
+- Interactive filtering and sorting
+
+## Security Considerations
+
+- **User Agent** - Default configuration uses Chrome user agent to avoid WAF blocks
+- **HTTPS** - Automatically tries HTTPS connections
+- **Active Scanning** - May trigger IDS/IPS alerts
+- **Rate Limiting** - Respect target application rate limits
+- **Authorization** - Only scan systems you have permission to test
+
+## References
+
+- [EyeWitness GitHub](https://github.com/ChrisTruncer/EyeWitness)
+- [EyeWitness Documentation](https://github.com/ChrisTruncer/EyeWitness/wiki)
+
+## Notes
+
+- Requires Python 2.7 or Python 3.x on remote system
+- Screenshots are captured using headless browser (Chromium/PhantomJS)
+- Report generation can take significant time for large target lists
+- Archive compression reduces transfer size significantly
+- The `--resolve` option ensures DNS resolution before screenshot attempts

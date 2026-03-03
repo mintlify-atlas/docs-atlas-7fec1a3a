@@ -1,0 +1,169 @@
+---
+title: Burp Suite Scanner Script
+description: Documentation for burpsuite_scan.bat automated scanning with Carbonator extension
+---
+
+Automated Burp Suite scanning script using the Carbonator extension for headless operation.
+
+## Overview
+
+The `burpsuite_scan.bat` script launches Burp Suite Professional with the Carbonator extension to perform automated vulnerability scans. Carbonator enables headless scanning and spider automation.
+
+### Carbonator Extension
+
+Carbonator is a Burp Suite extension that provides:
+- Headless scanning capabilities
+- Automated spider and scan
+- Command-line driven operation
+
+**Extension URL**: https://www.integrissecurity.com/index.php?resources=Carbonator
+
+## Parameters
+
+| Parameter | Position | Description |
+|-----------|----------|-------------|
+| `burpsuite` | 1 | Path to Burp Suite executable (.jar or .exe) |
+| `scheme` | 2 | URL scheme (http or https) |
+| `fqdn` | 3 | Fully qualified domain name or IP address |
+| `port` | 4 | Target port number |
+| `folder` | 5 | Target folder/path on the server |
+
+## Usage
+
+### Using JAR File
+
+```batch
+burpsuite_scan.bat "C:\Tools\burpsuite_pro.jar" "https" "example.com" "443" "app"
+```
+
+This executes:
+```batch
+java -jar -Xmx2g C:\Tools\burpsuite_pro.jar https example.com 443 app
+```
+
+### Using EXE File
+
+```batch
+burpsuite_scan.bat "C:\Program Files\BurpSuite\burpsuite.exe" "http" "testsite.local" "80" "/"
+```
+
+This executes:
+```batch
+C:\Program Files\BurpSuite\burpsuite.exe http testsite.local 80 /
+```
+
+## Script Behavior
+
+### JAR Execution
+
+When the burpsuite parameter ends with `.jar`:
+- Launches Java with 2GB heap memory (`-Xmx2g`)
+- Passes scheme, FQDN, port, and folder as arguments to Carbonator
+
+```batch
+java -jar -Xmx2g %burpsuite% %scheme% %fqdn% %port% %folder%
+```
+
+### EXE Execution
+
+When the burpsuite parameter ends with `.exe`:
+- Launches the executable directly
+- Passes the same arguments
+
+```batch
+%burpsuite% %scheme% %fqdn% %port% %folder%
+```
+
+## Example Scan Scenarios
+
+### HTTPS Web Application
+
+```batch
+burpsuite_scan.bat "burpsuite_pro.jar" "https" "webapp.company.com" "443" "admin"
+```
+
+Scans: `https://webapp.company.com:443/admin`
+
+### HTTP Application on Custom Port
+
+```batch
+burpsuite_scan.bat "burpsuite_pro.jar" "http" "192.168.1.100" "8080" "api/v1"
+```
+
+Scans: `http://192.168.1.100:8080/api/v1`
+
+### Root Path Scan
+
+```batch
+burpsuite_scan.bat "burpsuite_pro.jar" "https" "example.com" "443" "/"
+```
+
+Scans: `https://example.com:443/`
+
+## Prerequisites
+
+<Note>
+- **Burp Suite Professional** with valid license (Carbonator requires Pro)
+- **Java Runtime Environment** (JRE) for .jar execution
+- **Carbonator extension** installed in Burp Suite
+- Sufficient memory (script allocates 2GB heap)
+</Note>
+
+### Installing Carbonator
+
+1. Download Carbonator from https://www.integrissecurity.com/index.php?resources=Carbonator
+2. In Burp Suite, go to **Extender** > **Extensions**
+3. Click **Add** and select the Carbonator .jar file
+4. Configure Carbonator settings for automated scanning
+
+## Configuration Notes
+
+### Memory Allocation
+
+The script uses `-Xmx2g` to allocate 2GB of heap memory. For larger scans, modify this value:
+
+```batch
+rem Increase to 4GB for large applications
+java -jar -Xmx4g %burpsuite% %scheme% %fqdn% %port% %folder%
+```
+
+### Headless Mode (Commented Out)
+
+The script includes a commented-out headless mode option:
+
+```batch
+rem java -jar -Xmx2g %burpsuite% -Djava.awt.headless=true %scheme% %fqdn% %port% /%folder%
+```
+
+To enable true headless operation, uncomment this line at burpsuite_scan.bat:18.
+
+## Limitations
+
+<Warning>
+- Requires Burp Suite Professional (Community edition does not support scanning)
+- Carbonator must be pre-configured within Burp Suite before running the script
+- The script does not configure proxy settings or authentication
+- No output file path is specified - reports must be configured in Carbonator settings
+</Warning>
+
+## Troubleshooting
+
+### Java Not Found
+
+If Java is not in the system PATH:
+```batch
+"C:\Program Files\Java\jdk-11\bin\java.exe" -jar -Xmx2g burpsuite_pro.jar ...
+```
+
+### Insufficient Memory
+
+If scans fail with OutOfMemoryError:
+- Increase heap size: `-Xmx4g` or `-Xmx8g`
+- Close other applications to free system memory
+
+### Carbonator Not Running
+
+Ensure Carbonator is:
+- Installed in Burp Suite Extender
+- Enabled and not showing errors
+- Configured with appropriate scan settings

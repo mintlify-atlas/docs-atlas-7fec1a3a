@@ -1,0 +1,251 @@
+---
+title: Acunetix Scanner Scripts
+description: Documentation for acunetix_scan.bat and acunetix_v11_scan.bat vulnerability scanning scripts
+---
+
+Two scripts are provided for Acunetix vulnerability scanning:
+- **acunetix_scan.bat** - Legacy script supporting Acunetix v6.0-10.50 and v11.0
+- **acunetix_v11_scan.bat** - API-based script for Acunetix v11/v12 with advanced features
+
+## acunetix_scan.bat
+
+Legacy Acunetix scanner that supports both command-line (v6.0-10.50) and newer console (v11.0) versions.
+
+### Parameters
+
+| Parameter | Position | Description |
+|-----------|----------|-------------|
+| `Proyecto` | 1 | Project name for identification |
+| `DirApp` | 2 | Directory path to Acunetix installation |
+| `URL` | 3 | Target URL to scan |
+| `Documentacion` | 4 | Output directory for scan reports |
+| `Timestamp` | 5 | Timestamp for file naming |
+| `NRO` | 6 | Scan number (used for staggered start delay) |
+
+### Usage
+
+```batch
+acunetix_scan.bat "MyProject" "C:\Program Files\Acunetix" "http://example.com" "C:\Reports" "20260303_120000" "1"
+```
+
+### Features
+
+- **Concurrent scan management**: Limits to maximum 5 concurrent scans
+- **Staggered start**: Delays scan start based on NRO parameter (NRO × 20 seconds)
+- **Auto-detection**: Automatically detects Acunetix version (v6-10.50 vs v11)
+- **Login sequence support**: Uses Login.lsr file for authenticated scanning
+
+### Script Behavior
+
+#### For Acunetix v6.0-10.50 (wvs_console.exe)
+
+```batch
+wvs_console.exe /Scan %URL% /Profile Default /Settings default \
+  /LoginSeq %Login% /Save /SaveFolder %Doc1% /SavetoDatabase \
+  /GenerateReporte /ReporteFormat PDF /Timestamps /Verbose \
+  --GetFirstOnly=FALSE --RobotsTxt=TRUE --UseWebKit=TRUE \
+  --EnablePortScanning=TRUE --UseAcuSensor=TRUE
+```
+
+**Options enabled:**
+- Default scanning profile
+- PDF report generation
+- WebKit browser engine
+- Port scanning
+- AcuSensor support
+- robots.txt parsing
+
+#### For Acunetix v11.0 (wvsc.exe)
+
+```batch
+wvsc.exe /scan %URL% /profile Default /status \
+  /login-sequence %Login% /allow-interactive-login /save %Doc2%
+```
+
+### Prerequisites
+
+<Note>
+- Acunetix must be installed (either wvs_console.exe or wvsc.exe)
+- Login.lsr file must exist in parent directory of Documentacion folder
+- Sufficient disk space for reports in Documentacion directory
+</Note>
+
+<Warning>
+The script limits concurrent scans to 5. Additional scans will wait (60 second intervals) until a slot becomes available.
+</Warning>
+
+---
+
+## acunetix_v11_scan.bat
+
+API-driven scanner for Acunetix v11 and v12 using REST API. Provides full automation including target creation, scan execution, and report generation.
+
+### Parameters
+
+| Parameter | Position | Description |
+|-----------|----------|-------------|
+| `Proyecto` | 1 | Project name for target identification |
+| `URL` | 2 | Target URL to scan |
+| `APIURL` | 3 | Acunetix API base URL (e.g., https://127.0.0.1:3443) |
+| `APIKEY` | 4 | API authentication key (X-Auth header) |
+| `Documentacion` | 5 | Output directory for HTML and PDF reports |
+| `Timestamp` | 6 | Timestamp for file naming |
+| `NRO` | 7 | Scan number (used for staggered start delay) |
+
+### Usage
+
+```batch
+acunetix_v11_scan.bat "MyProject" "http://example.com" ^
+  "https://127.0.0.1:3443" "1986b1e744d29b1c26ce8146874609988b92e85e60c07c4aa" ^
+  "C:\Reports" "20260303_120000" "1"
+```
+
+### Required Dependencies
+
+The script expects these tools in the same directory (`%~dp0`):
+- **curl.exe** - For API requests
+- **jq-win32.exe** - For JSON parsing
+
+### API Workflow
+
+The script executes the following API operations:
+
+#### 1. Add Target
+
+```bash
+curl -X POST -H "Content-Type: application/json" -H "X-Auth: API_KEY" \
+  -d '{"address":"URL","description":"PROJECT","criticality":"10"}' \
+  https://127.0.0.1:3443/api/v1/targets
+```
+
+**Endpoint**: `POST /api/v1/targets`  
+**Returns**: `target_id`
+
+#### 2. Start Scan
+
+```bash
+curl -X POST -H "Content-Type: application/json" -H "X-Auth: API_KEY" \
+  -d '{"profile_id":"11111111-1111-1111-1111-111111111111","target_id":"TARGET_ID"}' \
+  https://127.0.0.1:3443/api/v1/scans
+```
+
+**Endpoint**: `POST /api/v1/scans`  
+**Profile**: Full Scan (11111111-1111-1111-1111-111111111111)  
+**Returns**: `scan_id` (from Location header)
+
+#### 3. Monitor Scan Status
+
+```bash
+curl -H "X-Auth: API_KEY" \
+  https://127.0.0.1:3443/api/v1/scans/SCAN_ID
+```
+
+**Endpoint**: `GET /api/v1/scans/{scan_id}`  
+**Polls**: Every 60 seconds  
+**Status values**: `processing`, `queued`, `scheduled`, `starting`, `completed`, `failed`, `aborting`
+
+#### 4. Generate Report
+
+```bash
+curl -X POST -H "Content-Type: application/json" -H "X-Auth: API_KEY" \
+  -d '{"template_id":"11111111-1111-1111-1111-111111111115","source":{"list_type":"scans","id_list":["SCAN_ID"]}}' \
+  https://127.0.0.1:3443/api/v1/reports
+```
+
+**Endpoint**: `POST /api/v1/reports`  
+**Template**: Affected Items (11111111-1111-1111-1111-111111111115)  
+**Returns**: `report_id`
+
+#### 5. Download Reports
+
+```bash
+curl -H "X-Auth: API_KEY" \
+  https://127.0.0.1:3443/api/v1/reports/REPORT_ID/download
+```
+
+**Endpoint**: `GET /api/v1/reports/{report_id}`  
+**Formats**: HTML (download[0]) and PDF (download[1])
+
+### Built-in Scan Profiles
+
+The script uses the Full Scan profile. Available profiles:
+
+| Profile | Profile ID |
+|---------|------------|
+| Full Scan | `11111111-1111-1111-1111-111111111111` |
+| High Risk Vulnerabilities | `11111111-1111-1111-1111-111111111112` |
+| SQL Injection Vulnerabilities | `11111111-1111-1111-1111-111111111113` |
+| Weak Passwords | `11111111-1111-1111-1111-111111111115` |
+| Cross-site Scripting Vulnerabilities | `11111111-1111-1111-1111-111111111116` |
+| Crawl Only | `11111111-1111-1111-1111-111111111117` |
+
+### Built-in Report Templates
+
+The script uses the Affected Items template. Available templates:
+
+| Template | Template ID |
+|----------|-------------|
+| Developer | `11111111-1111-1111-1111-111111111111` |
+| Quick | `11111111-1111-1111-1111-111111111112` |
+| Executive Summary | `11111111-1111-1111-1111-111111111113` |
+| HIPAA | `11111111-1111-1111-1111-111111111114` |
+| Affected Items | `11111111-1111-1111-1111-111111111115` |
+| CWE 2011 | `11111111-1111-1111-1111-111111111116` |
+| ISO 27001 | `11111111-1111-1111-1111-111111111117` |
+| NIST SP800 53 | `11111111-1111-1111-1111-111111111118` |
+| OWASP Top 10 2013 | `11111111-1111-1111-1111-111111111119` |
+| PCI DSS 3.2 | `11111111-1111-1111-1111-111111111120` |
+| Sarbanes Oxley | `11111111-1111-1111-1111-111111111121` |
+| STIG DISA | `11111111-1111-1111-1111-111111111122` |
+| WASC Threat Classification | `11111111-1111-1111-1111-111111111123` |
+| Scan Comparison | `11111111-1111-1111-1111-111111111124` |
+| OWASP Top 10 2017 | `11111111-1111-1111-1111-111111111125` |
+
+### Output Files
+
+Generated reports:
+- `AcunetixReport - {Timestamp}.html` - HTML format report
+- `AcunetixReport - {Timestamp}.pdf` - PDF format report
+
+### Error Handling
+
+The script exits with error messages for:
+- **Target creation failure**: `Error: Generando Target`
+- **Scan start failure**: `Error: Iniciando Scan`
+- **Scan stopped**: `Error: Se detuvo el escaneo`
+- **Scan failed**: `Error: Error en el escaneo`
+- **Scan aborted**: `Error: Scaneo detenido`
+- **Report generation failure**: `Error: No se genero el Reporte`
+
+### Advanced Configuration
+
+The script includes commented-out code for advanced target configuration:
+
+```json
+{
+  "excluded_paths": ["manager", "phpmyadmin", "testphp"],
+  "user_agent": "Mozilla/5.0...",
+  "custom_headers": ["Accept: */*", "Connection: Keep-alive"],
+  "custom_cookies": [{"url": "...", "cookie": "..."}],
+  "scan_speed": "moderate",
+  "technologies": ["PHP"],
+  "proxy": {"enabled": false, "address": "127.0.0.1", "port": 8080},
+  "login": {"kind": "automatic", "credentials": {"enabled": false}},
+  "authentication": {"enabled": false}
+}
+```
+
+To enable, uncomment and modify lines 36-37 in acunetix_v11_scan.bat:36-37.
+
+### Prerequisites
+
+<Note>
+- Acunetix v11 or v12 must be installed and running
+- API must be accessible at APIURL
+- Valid API key with scan permissions
+- curl.exe and jq-win32.exe in script directory
+</Note>
+
+<Warning>
+The script automatically opens the HTML report in the default browser upon completion. The PDF report is generated but not automatically opened.
+</Warning>

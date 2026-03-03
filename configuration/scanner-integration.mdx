@@ -1,0 +1,631 @@
+---
+title: Scanner Integration
+description: Configure credentials and endpoints for vulnerability scanners including Acunetix, Nessus, OpenVAS, Qualys, and more
+---
+
+Simple Vulnerability Manager integrates with industry-leading vulnerability scanners, enabling one-click scan execution and automatic report import. This guide covers configuring scanner credentials, API endpoints, and authentication.
+
+## Web Vulnerability Scanners
+
+### Acunetix
+
+SVM supports both Acunetix 10.5 (local) and Acunetix 11/12 (Enterprise API).
+
+#### Acunetix 11/12 API Configuration
+
+<Steps>
+  <Step title="Obtain API Credentials">
+    Log into your Acunetix installation and generate an API key from the user profile settings.
+  </Step>
+  
+  <Step title="Configure API Settings">
+    In SVM, navigate to **Configuration** → **Web Scanners** → **Acunetix**
+    
+    Enter the following details:
+    - **API URL**: `https://[your-acunetix-server]:3443`
+    - **API Key**: Your generated API key
+  </Step>
+  
+  <Step title="Test Connection">
+    Click **Test Connection** to verify SVM can communicate with your Acunetix server.
+  </Step>
+</Steps>
+
+#### Scan Configuration Options
+
+The Acunetix integration supports advanced scan configurations:
+
+```json
+{
+  "scan_speed": "moderate",
+  "technologies": ["PHP"],
+  "excluded_paths": ["manager", "phpmyadmin", "testphp"],
+  "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5)",
+  "custom_headers": [
+    "Accept: */*",
+    "Connection: Keep-alive"
+  ]
+}
+```
+
+#### Built-in Scan Profiles
+
+- **Full Scan**: `11111111-1111-1111-1111-111111111111`
+- **High Risk Vulnerabilities**: `11111111-1111-1111-1111-111111111112`
+- **XSS Vulnerabilities**: `11111111-1111-1111-1111-111111111116`
+- **SQL Injection**: `11111111-1111-1111-1111-111111111113`
+- **Weak Passwords**: `11111111-1111-1111-1111-111111111115`
+- **Crawl Only**: `11111111-1111-1111-1111-111111111117`
+
+#### Report Templates
+
+Acunetix provides multiple report formats:
+
+- **Developer**: `11111111-1111-1111-1111-111111111111`
+- **Quick**: `11111111-1111-1111-1111-111111111112`
+- **Executive Summary**: `11111111-1111-1111-1111-111111111113`
+- **OWASP Top 10 2017**: `11111111-1111-1111-1111-111111111125`
+- **PCI DSS 3.2**: `11111111-1111-1111-1111-111111111120`
+- **Affected Items**: `11111111-1111-1111-1111-111111111115` (default in SVM)
+
+<Note>
+SVM automatically exports reports in both HTML and PDF formats. The scan script includes a 20-second delay multiplied by the URL number to prevent overwhelming the Acunetix server.
+</Note>
+
+<Warning>
+Support for Acunetix 10.5 Remote was removed in version 1.1.792 and replaced with Acunetix 11 API integration. Update your configuration accordingly.
+</Warning>
+
+### Burp Suite
+
+Configure Burp Suite Professional for web application testing:
+
+<Steps>
+  <Step title="Locate Burp Suite Executable">
+    Navigate to **Configuration** → **Web Scanners** → **Burp Suite**
+  </Step>
+  
+  <Step title="Select Executable">
+    Browse and select your Burp Suite JAR or executable file. SVM supports custom executable paths (fixed in version 1.1.790).
+  </Step>
+  
+  <Step title="Configure Java">
+    Ensure Java Runtime Environment (JRE) is installed and accessible in your system PATH.
+  </Step>
+</Steps>
+
+### Netsparker
+
+Configure Netsparker for automated web application security scanning:
+
+<Steps>
+  <Step title="Configure Netsparker Path">
+    Navigate to **Configuration** → **Web Scanners** → **Netsparker**
+  </Step>
+  
+  <Step title="Set Executable Location">
+    Browse to your Netsparker installation directory and select the executable.
+  </Step>
+  
+  <Step title="Launch Scans">
+    Web URLs must include the protocol (`http://` or `https://`) for proper scan execution (enforced since version 1.1.791).
+  </Step>
+</Steps>
+
+### Arachni
+
+Configure Arachni Web Application Scanner for remote scanning:
+
+<Steps>
+  <Step title="Set Remote Server Details">
+    Navigate to **Configuration** → **Web Scanners** → **Arachni**
+    
+    Configure your Arachni server:
+    - **Server Address**: IP or hostname
+    - **Port**: Default Arachni port
+    - **Credentials**: If authentication is enabled
+  </Step>
+  
+  <Step title="Configure SSH Access">
+    For remote Arachni installations, configure SSH credentials for report retrieval.
+  </Step>
+</Steps>
+
+<Note>
+Web URLs must have the `http://` or `https://` protocol specified to launch Arachni scans successfully.
+</Note>
+
+## Service Vulnerability Scanners
+
+### Nessus
+
+Configure Tenable Nessus for network and service vulnerability scanning.
+
+#### Connection Settings
+
+<Steps>
+  <Step title="Configure Nessus Server">
+    Navigate to **Configuration** → **Service Scanners** → **Nessus**
+    
+    Enter connection details:
+    - **Server**: Nessus server hostname or IP
+    - **Port**: HTTPS port (default: `8834`)
+    - **Username**: Nessus user account
+    - **Password**: Account password
+  </Step>
+  
+  <Step title="Verify Service Status">
+    SVM automatically detects if the Nessus service is running. If not started, you'll receive instructions to start it via SSH.
+  </Step>
+</Steps>
+
+#### Service Management
+
+If Nessus service is not running, start it manually:
+
+```bash
+# On the Nessus server
+/etc/init.d/nessusd start
+```
+
+#### Policy Configuration
+
+<Steps>
+  <Step title="Retrieve Scan Policies">
+    SVM automatically fetches available scan policies from your Nessus server using the API.
+  </Step>
+  
+  <Step title="Select Policy">
+    Choose the appropriate policy for your scan:
+    - Basic Network Scan
+    - Advanced Scan
+    - PCI Quarterly External Scan
+    - Custom policies you've created
+  </Step>
+</Steps>
+
+#### Export Formats
+
+Nessus scans are exported in multiple formats (added in version 1.1.792):
+
+- **HTML**: Human-readable report format
+- **XML/Nessus**: Machine-readable format for importing into SVM
+
+<Note>
+The User-Agent was updated in version 1.1.794 to ensure compatibility with Nessus 7 and later versions.
+</Note>
+
+### OpenVAS
+
+Configure OpenVAS (Open Vulnerability Assessment System) for comprehensive vulnerability scanning.
+
+#### Connection Configuration
+
+<Steps>
+  <Step title="Configure OpenVAS Manager">
+    Navigate to **Configuration** → **Service Scanners** → **OpenVAS**
+    
+    Configure connection parameters:
+    - **Server**: OpenVAS Manager hostname/IP
+    - **Port**: OMP port (default: `9390`)
+    - **Username**: OpenVAS user account
+    - **Password**: Account password
+  </Step>
+  
+  <Step title="Test OMP Connection">
+    SVM uses the OpenVAS Management Protocol (OMP) to communicate with the scanner.
+  </Step>
+</Steps>
+
+#### Scan Configurations
+
+<Steps>
+  <Step title="Retrieve Scan Configs">
+    SVM fetches available scan configurations using OMP commands:
+    
+    ```xml
+    <get_configs />
+    ```
+  </Step>
+  
+  <Step title="Select Configuration">
+    Choose from available scan configurations:
+    - Full and fast
+    - Full and very deep
+    - System Discovery
+    - Custom configurations
+  </Step>
+</Steps>
+
+#### Report Formats
+
+<Steps>
+  <Step title="Get Available Report Formats">
+    SVM retrieves available report formats from OpenVAS for export.
+  </Step>
+  
+  <Step title="Configure Export Format">
+    Select your preferred report format for automatic export after scan completion.
+  </Step>
+</Steps>
+
+#### Remote OpenVAS Configuration
+
+For remote OpenVAS installations:
+
+<Steps>
+  <Step title="Configure SSH Access">
+    Set up SSH credentials for remote server access:
+    - **SSH Server**: Remote server IP/hostname
+    - **SSH Username**: Linux user account
+    - **SSH Password**: Account password
+  </Step>
+  
+  <Step title="Install Remote Tools">
+    Navigate to **Tools** → **Install** → **Remote** → **OpenVAS** to install required components on the remote server.
+  </Step>
+  
+  <Step title="Ubuntu for Windows 10 Support">
+    OpenVAS remote scripts support Ubuntu for Windows 10 (WSL) as of version 1.1.792.
+  </Step>
+</Steps>
+
+<Note>
+OpenVAS configuration retrieval displays detailed error messages when authentication fails, helping troubleshoot connection issues (improved in version 1.1.791).
+</Note>
+
+#### Editing Scripts
+
+<Steps>
+  <Step title="Access Script Editor">
+    Navigate to **Tools** → **Edit Script** → **OpenVAS**
+  </Step>
+  
+  <Step title="Modify Local or Remote Scripts">
+    Edit OpenVAS scanning scripts for both local and remote configurations (added in version 1.1.787).
+  </Step>
+</Steps>
+
+#### Plugin Management
+
+<Steps>
+  <Step title="Update OpenVAS Plugins">
+    Navigate to **Tools** → **Update Plugins** → **OpenVAS**
+  </Step>
+  
+  <Step title="Synchronize Plugin Feed">
+    SVM executes the plugin update command to ensure you have the latest vulnerability checks.
+  </Step>
+</Steps>
+
+### Qualys
+
+Configure Qualys Community or Enterprise for cloud-based vulnerability scanning.
+
+#### API Configuration
+
+<Steps>
+  <Step title="Configure Qualys Credentials">
+    Navigate to **Configuration** → **Service Scanners** → **Qualys**
+    
+    Enter your Qualys account details:
+    - **Username**: Qualys account username
+    - **Password**: Qualys account password
+  </Step>
+  
+  <Step title="Configure Proxy (if needed)">
+    If accessing Qualys through a proxy:
+    - **Use Proxy**: Enable proxy usage
+    - **Proxy IP**: Proxy server address
+    - **Proxy Port**: Proxy port number
+    - **Proxy User**: Proxy authentication username
+    - **Proxy Password**: Proxy authentication password
+  </Step>
+</Steps>
+
+#### API Endpoint
+
+SVM connects to Qualys API at:
+```
+https://qualysapi.qualys.com/msp/report_template_list.php
+```
+
+#### Report Templates
+
+<Steps>
+  <Step title="Retrieve Templates">
+    SVM automatically fetches available report templates from Qualys using the API.
+  </Step>
+  
+  <Step title="Select Template">
+    Choose from available templates based on your compliance requirements:
+    - Technical Report
+    - Executive Report
+    - PCI Compliance Report
+    - Custom templates
+  </Step>
+</Steps>
+
+<Warning>
+Qualys External scanning cannot scan private IP addresses. You'll receive an informative message if attempting to scan private IPs (added in version 1.1.788).
+</Warning>
+
+<Note>
+Configuration retrieval issues are now properly displayed with descriptive error messages (fixed in version 1.1.791).
+</Note>
+
+## Network Scanning Tools
+
+### Nmap
+
+Configure Nmap for network discovery and port scanning.
+
+#### Local Nmap Configuration
+
+<Steps>
+  <Step title="Verify Nmap Installation">
+    Ensure Nmap is installed and accessible in your system PATH.
+  </Step>
+  
+  <Step title="Configure Nmap Path">
+    Navigate to **Configuration** → **Network Tools** → **Nmap**
+  </Step>
+  
+  <Step title="Test Nmap">
+    Run a test scan to verify Nmap is properly configured.
+  </Step>
+</Steps>
+
+#### Remote Nmap Installation
+
+<Steps>
+  <Step title="Install Remote Nmap">
+    Navigate to **Tools** → **Install** → **Remote** → **Nmap** (added in version 1.1.788)
+  </Step>
+  
+  <Step title="Configure Remote Access">
+    Set up SSH credentials for the remote server where scans will execute.
+  </Step>
+  
+  <Step title="Edit Nmap Scripts">
+    The local Nmap script was fixed in version 1.1.787 for improved reliability.
+  </Step>
+</Steps>
+
+#### Scanning Web/Domains
+
+<Steps>
+  <Step title="Add Targets to Project">
+    Add web URLs or domain names to your project's target list.
+  </Step>
+  
+  <Step title="Launch Nmap Scan">
+    Select **Tools** → **Nmap** → **Scan Web/Domains**
+  </Step>
+  
+  <Step title="Domain Support">
+    Nmap can scan domains without IP resolution (fixed in version 1.1.792).
+  </Step>
+</Steps>
+
+<Note>
+Version 2.0.3 added the ability to launch Nmap scans against Web/Domains directly from the project interface.
+</Note>
+
+## Information Gathering Tools
+
+### Recon-ng
+
+Configure Recon-ng for reconnaissance and information gathering.
+
+#### Configuration
+
+<Steps>
+  <Step title="Configure Recon-ng Path">
+    Navigate to **Configuration** → **Information Tools** → **Recon-ng**
+  </Step>
+  
+  <Step title="Set API Keys">
+    Configure API keys for various reconnaissance services:
+    - **SHODAN API Key**: For Shodan queries
+    - **IPInfoDB API Key**: For IP geolocation
+    - Other service API keys as needed
+  </Step>
+  
+  <Step title="Configure Modules">
+    Version 2.0.1 added support for:
+    - certificate_transparency
+    - google_site_web
+    - hackertarget
+    - threatcrowd
+  </Step>
+</Steps>
+
+#### Domain Scanning
+
+<Steps>
+  <Step title="Add Domains">
+    Domains can be added without specifying the protocol (fixed in version 2.0.3).
+  </Step>
+  
+  <Step title="Launch Recon-ng">
+    Execute reconnaissance modules with a single click from the project interface.
+  </Step>
+</Steps>
+
+<Note>
+The Recon-ng executable path was updated in version 2.0.0 for better compatibility. Configuration saving was fixed in version 2.0.1.
+</Note>
+
+### EyeWitness
+
+Configure EyeWitness for web application screenshot capture.
+
+#### Local Configuration
+
+<Steps>
+  <Step title="Configure EyeWitness Path">
+    Navigate to **Configuration** → **Information Tools** → **EyeWitness**
+  </Step>
+  
+  <Step title="Set Python Environment">
+    Ensure Python and EyeWitness dependencies are installed.
+  </Step>
+</Steps>
+
+#### Remote Configuration
+
+<Steps>
+  <Step title="Install Remote EyeWitness">
+    Navigate to **Tools** → **Install** → **Remote** → **EyeWitness**
+  </Step>
+  
+  <Step title="Configure Remote Server">
+    Set SSH credentials for remote execution.
+  </Step>
+  
+  <Step title="Retrieve Reports">
+    SVM automatically retrieves EyeWitness reports from remote servers (fixed in version 1.1.792).
+  </Step>
+</Steps>
+
+<Note>
+EyeWitness and Java remote installation options were added to the Tools menu in version 1.1.792.
+</Note>
+
+## Android Security Tools
+
+### MobSF (Mobile Security Framework)
+
+Configure MobSF for Android application security analysis.
+
+<Steps>
+  <Step title="Configure MobSF Server">
+    Navigate to **Configuration** → **Android Tools** → **MobSF**
+    
+    Enter server details:
+    - **Server URL**: MobSF web interface URL
+    - **API Key**: MobSF API key
+  </Step>
+  
+  <Step title="Test Connection">
+    Verify SVM can communicate with your MobSF instance.
+  </Step>
+</Steps>
+
+### APK Tools
+
+Configure tools for APK analysis and manipulation.
+
+#### Android Debug Bridge (ADB)
+
+- Version 1.0.39 included (updated in version 2.1.0)
+- No additional configuration required
+- Automatically detected when Android device is connected
+
+#### Apktool
+
+<Steps>
+  <Step title="Configure Apktool">
+    SVM includes download links for Apktool 2.4.0 (updated in version 2.1.0)
+  </Step>
+  
+  <Step title="Local and Remote Support">
+    Apktool can execute locally or on remote servers via SSH.
+  </Step>
+</Steps>
+
+#### Other Android Tools
+
+- **Enjarify**: DEX to JAR conversion
+- **JD-Gui**: Java decompiler (version 1.5.2 link updated in 2.1.0)
+- **QARK**: Quick Android Review Kit (script updated in version 1.1.794)
+- **AndroBugs Framework**: Static analysis
+- **Uber APK Signer**: APK signing tool (version 1.0.0 link updated in 2.1.0)
+
+<Note>
+All Android tool configurations were updated in version 2.1.0 with the latest download links and version information.
+</Note>
+
+## General Scanner Configuration Tips
+
+### Certificate Handling
+
+For scanners with self-signed certificates (OpenVAS, Nessus):
+
+- SVM's integrated web browser can access pages with invalid certificates (fixed in version 1.1.789)
+- No additional certificate configuration required
+
+### Script Management
+
+<Steps>
+  <Step title="Update All Scripts">
+    Navigate to **Tools** → **Update Scripts and Tools** to download the latest versions of all integration scripts.
+  </Step>
+  
+  <Step title="Edit Scripts">
+    All `.bat` and `.sh` scripts are open source and can be edited to customize scanner behavior.
+  </Step>
+  
+  <Step title="Review Script Documentation">
+    Each script includes comments explaining parameters and API endpoints used.
+  </Step>
+</Steps>
+
+### SSH Configuration for Remote Scanners
+
+For remote scanner execution:
+
+<Steps>
+  <Step title="Install PuTTY Tools">
+    SVM uses PuTTY tools for SSH connectivity:
+    - **PLink**: Version 0.70 (updated in version 1.1.793)
+    - **PSCP**: Version 0.70 (updated in version 1.1.793)
+  </Step>
+  
+  <Step title="Configure SSH Credentials">
+    Enter SSH credentials in scanner configuration:
+    - **Server**: Remote server hostname/IP
+    - **Username**: SSH username
+    - **Password**: SSH password
+  </Step>
+  
+  <Step title="Test SSH Connection">
+    Use the test connection feature to verify SSH access before running scans.
+  </Step>
+</Steps>
+
+<Note>
+Remote scanner scripts were improved in version 1.1.794 to properly copy files to remote servers (OpenVAS and QARK scripts fixed).
+</Note>
+
+## Troubleshooting
+
+### Common Configuration Issues
+
+<Warning>
+**Target Format Requirements**: All web URLs must include the protocol (`http://` or `https://`) when launching scanner tools. This requirement was enforced in version 1.1.791 to prevent scanning errors.
+</Warning>
+
+### Connection Testing
+
+Always test scanner connections after configuration:
+
+1. Save your configuration
+2. Click "Test Connection" 
+3. Review error messages for authentication or network issues
+4. Verify firewall rules allow outbound connections
+5. Check scanner service status on remote servers
+
+### Error Messages
+
+SVM provides detailed error messages for configuration issues:
+
+- **Authentication failures**: Check username/password
+- **Connection timeouts**: Verify server address and port
+- **SSL/TLS errors**: Ensure proper certificate handling
+- **API errors**: Verify API keys and permissions
+
+<Note>
+Configuration error handling was significantly improved in version 2.0.3, providing more descriptive messages for troubleshooting.
+</Note>

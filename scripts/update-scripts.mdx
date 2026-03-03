@@ -1,0 +1,473 @@
+---
+title: 'Update All Scripts'
+description: 'Automated script updater that downloads the latest versions of all SVM scripts from the GitHub repository'
+---
+
+## Overview
+
+The `update_all_scripts.bat` script automatically updates all Simple Vulnerability Manager scripts to their latest versions from the official GitHub repository. This ensures you have the most recent features, bug fixes, and security improvements.
+
+## Usage
+
+```batch
+update_all_scripts.bat
+```
+
+Simply run the script from the SVM installation directory. No parameters required.
+
+## Updated Scripts
+
+The script updates 52 SVM scripts across all categories:
+
+### Network Scanning Scripts
+
+- `nmap_scan.bat`
+- `nmap_scan_remote.bat`
+
+### Vulnerability Scanning Scripts
+
+#### Nessus
+- `nessus_scan.bat`
+- `nessus_get_policies.bat`
+
+#### Acunetix
+- `acunetix_scan.bat`
+- `acunetix_v11_scan.bat`
+
+#### Arachni
+- `arachni_scan_remote.bat`
+
+#### Qualys
+- `qualys_scan.bat`
+- `qualys_scan_report.bat`
+- `qualys_report.bat`
+- `qualys_report_xml.bat`
+- `qualys_get_scanner_appliances.bat`
+- `qualys_get_reports_templates.bat`
+
+#### Burp Suite
+- `burpsuite_scan.bat`
+
+#### Netsparker
+- `netsparker_scan.bat`
+
+#### OpenVAS
+- `openvas_scan.bat`
+- `openvas_scan_remote.bat`
+- `openvas_scan_remote.sh`
+- `openvas_get_scan_configs.bat`
+- `openvas_get_scan_configs_remote.bat`
+- `openvas_get_scan_configs_remote.sh`
+- `openvas_get_report_formats.bat`
+- `openvas_get_report_formats_remote.bat`
+- `openvas_get_report_formats_remote.sh`
+
+### Mobile Security Scripts
+
+#### APK Tools
+- `apktool_decode_local.bat`
+- `apktool_decode_remote.bat`
+- `apktool_build_local.bat`
+
+#### Android Tools
+- `apk_install_local.bat`
+- `apk_install_remote.bat`
+- `apk_sign_local.bat`
+- `android_comandos.bat`
+- `run_avd.bat`
+
+#### Mobile Scanners
+- `androbugs_framework.bat`
+- `qark.bat`
+- `qark.sh`
+- `mobsf.bat`
+
+### Java Tools
+- `jd-gui.bat`
+- `enjarify_local.bat`
+- `enjarify_remote.bat`
+
+### OSINT & Reconnaissance
+- `recon_ng_remote.bat`
+- `EyeWitness_remote.bat`
+
+### Web Interface Scripts
+- `web_proyectos.bat`
+- `web_vulnerabilidades.bat`
+
+### Authentication Scripts
+- `Login_fast.rb`
+- `Login_slow.rb`
+
+### Utility Scripts
+- `upload_file.bat`
+
+### Installation & Update Scripts
+- `install_upgrade_tools_local.bat`
+- `install_upgrade_tools_remoto.bat`
+- `install_upgrade_tools_remoto.sh`
+- `update_all_scripts.bat` (self-update)
+
+## How It Works
+
+### Update Mechanism
+
+The script uses a subroutine that:
+
+1. Downloads the latest version from GitHub
+2. Overwrites the local file
+3. Maintains silent operation with curl `-s` flag
+
+<CodeGroup>
+
+```batch Main Script
+@echo off
+setlocal
+
+call :actualizar nmap_scan.bat
+call :actualizar nessus_scan.bat
+call :actualizar openvas_scan.bat
+# ... (all scripts)
+
+pause
+EXIT /B 0
+```
+
+```batch Update Subroutine
+:actualizar
+echo Actualizando %1...
+"%~dp0curl.exe" -s -o %1 https://raw.githubusercontent.com/simplevulnerabilitymanager/svm/master/%1
+EXIT /B 0
+```
+
+</CodeGroup>
+
+### Download Source
+
+All scripts are downloaded from the official SVM GitHub repository:
+
+```text
+https://raw.githubusercontent.com/simplevulnerabilitymanager/svm/master/
+```
+
+This ensures:
+- Latest stable versions
+- Verified and tested code
+- Official distribution channel
+
+## Requirements
+
+### Dependencies
+
+- **curl.exe** - Must be present in the same directory as update_all_scripts.bat
+- **Internet Connection** - Required to access GitHub
+- **Write Permissions** - Script directory must be writable
+
+### Network Requirements
+
+- Outbound HTTPS access to GitHub
+- No proxy configuration needed (uses system proxy if configured)
+- Port 443 (HTTPS) must be accessible
+
+## Execution Details
+
+### Silent Mode
+
+The script uses curl's `-s` (silent) flag to suppress progress output:
+
+```batch
+"%~dp0curl.exe" -s -o %1 https://raw.githubusercontent.com/...
+```
+
+This provides:
+- Clean console output
+- Only shows "Actualizando [filename]..." messages
+- No transfer statistics or progress bars
+
+### File Overwrite
+
+The `-o` flag overwrites existing files without confirmation:
+
+```batch
+-o nmap_scan.bat
+```
+
+**Important:** This replaces local modifications. Always backup customized scripts before updating.
+
+## Update Frequency
+
+### Recommended Schedule
+
+- **Production Environments** - Monthly updates
+- **Testing Environments** - Weekly updates
+- **After Bug Reports** - Immediate update when fixes are released
+- **Major Releases** - Check changelog before updating
+
+### Version Tracking
+
+The script does not track versions automatically. To verify updates:
+
+```batch
+# Check file modification dates
+dir /T:W
+```
+
+Or use Git to track changes:
+
+```batch
+git diff nmap_scan.bat
+```
+
+## Backup Before Update
+
+Create backups of customized scripts:
+
+```batch
+# Create backup directory
+mkdir backup_%DATE%
+
+# Copy all .bat files
+copy *.bat backup_%DATE%\
+
+# Run update
+update_all_scripts.bat
+```
+
+## Custom Scripts Protection
+
+If you have custom scripts in the same directory:
+
+1. **Use Different Names** - Custom scripts won't be overwritten
+2. **Separate Directory** - Keep custom scripts elsewhere
+3. **Version Control** - Use Git to track local changes
+
+## Selective Updates
+
+To update specific scripts only, modify the update script:
+
+```batch
+@echo off
+setlocal
+
+REM Update only network scanning scripts
+call :actualizar nmap_scan.bat
+call :actualizar nmap_scan_remote.bat
+
+REM Update only mobile scripts
+call :actualizar apktool_decode_local.bat
+call :actualizar mobsf.bat
+
+pause
+EXIT /B 0
+
+:actualizar
+echo Actualizando %1...
+"%~dp0curl.exe" -s -o %1 https://raw.githubusercontent.com/simplevulnerabilitymanager/svm/master/%1
+EXIT /B 0
+```
+
+## Self-Update
+
+The script updates itself:
+
+```batch
+call :actualizar update_all_scripts.bat
+```
+
+This ensures the update mechanism stays current with any new scripts added to the repository.
+
+## Verification
+
+### Verify Update Success
+
+After running the update script:
+
+```batch
+# Check file timestamps
+dir *.bat /O:D
+
+# Recent files indicate successful update
+```
+
+### Test Updated Scripts
+
+Run a simple test after updating:
+
+```batch
+# Test a scanner script
+nmap_scan.bat --help
+
+# Test installation script
+install_upgrade_tools_local.bat
+```
+
+## Troubleshooting
+
+### curl.exe Not Found
+
+**Issue:** The system cannot find curl.exe
+
+**Solution:**
+```batch
+# Verify curl.exe exists in script directory
+dir curl.exe
+
+# Download curl for Windows if missing
+# https://curl.se/windows/
+```
+
+### Download Failures
+
+**Issue:** Scripts fail to download
+
+**Solution:**
+```batch
+# Test connectivity
+curl -s https://raw.githubusercontent.com/simplevulnerabilitymanager/svm/master/nmap_scan.bat
+
+# Check proxy settings
+echo %HTTP_PROXY%
+echo %HTTPS_PROXY%
+
+# Use verbose mode to debug
+curl -v -o test.bat https://raw.githubusercontent.com/...
+```
+
+### Permission Denied
+
+**Issue:** Cannot overwrite files
+
+**Solution:**
+```batch
+# Run as Administrator
+Right-click update_all_scripts.bat → Run as administrator
+
+# Or check file attributes
+attrib *.bat
+
+# Remove read-only if needed
+attrib -r *.bat
+```
+
+### Partial Updates
+
+**Issue:** Some scripts update, others fail
+
+**Solution:**
+```batch
+# Run update again (safe to run multiple times)
+update_all_scripts.bat
+
+# Check specific file manually
+curl -o nmap_scan.bat https://raw.githubusercontent.com/simplevulnerabilitymanager/svm/master/nmap_scan.bat
+```
+
+### Network Firewall/Proxy Issues
+
+**Issue:** Corporate firewall blocks GitHub
+
+**Solution:**
+```batch
+# Configure proxy in curl
+set HTTP_PROXY=http://proxy.company.com:8080
+set HTTPS_PROXY=http://proxy.company.com:8080
+
+# Or use proxy flag directly
+curl -x http://proxy.company.com:8080 -o script.bat https://...
+```
+
+## Manual Update Alternative
+
+If automatic updates fail, manually download from GitHub:
+
+```text
+1. Visit: https://github.com/simplevulnerabilitymanager/svm
+2. Navigate to desired script
+3. Click "Raw" button
+4. Save file to SVM directory
+```
+
+## Change Log Checking
+
+Before updating, check the repository for changes:
+
+```text
+GitHub Repository: https://github.com/simplevulnerabilitymanager/svm
+Commits: https://github.com/simplevulnerabilitymanager/svm/commits/master
+Releases: https://github.com/simplevulnerabilitymanager/svm/releases
+```
+
+## Post-Update Tasks
+
+After successful update:
+
+1. **Review Changes** - Check GitHub commits for new features
+2. **Test Critical Scripts** - Verify scanners still work
+3. **Update Documentation** - Note any new parameters or requirements
+4. **Notify Team** - Inform users of updates
+5. **Update Configuration** - Adjust for any API changes
+
+## Rollback Procedure
+
+If updates cause issues:
+
+```batch
+# Restore from backup
+copy backup_%DATE%\*.bat .
+
+# Or download specific version from GitHub
+# https://raw.githubusercontent.com/simplevulnerabilitymanager/svm/<commit-hash>/script.bat
+```
+
+## Update Script Output
+
+Expected output during execution:
+
+```text
+Actualizando nmap_scan.bat...
+Actualizando nmap_scan_remote.bat...
+Actualizando nessus_scan.bat...
+Actualizando nessus_get_policies.bat...
+Actualizando acunetix_scan.bat...
+...
+Actualizando update_all_scripts.bat...
+Press any key to continue . . .
+```
+
+## Integration with Scheduled Tasks
+
+Automate updates with Windows Task Scheduler:
+
+```batch
+# Create scheduled task
+schtasks /create /tn "SVM Update" /tr "C:\SVM\update_all_scripts.bat" /sc weekly /d SUN /st 02:00
+
+# Or use Task Scheduler GUI for more options
+```
+
+## Security Considerations
+
+- **Source Trust** - Scripts download from official GitHub repository only
+- **HTTPS** - All downloads use encrypted connections
+- **No Execution** - Update script only downloads files, doesn't execute them
+- **Verification** - Review changes before using updated scripts in production
+
+## Related Scripts
+
+- `install_upgrade_tools_local.bat` - Install/upgrade security tools locally
+- `install_upgrade_tools_remoto.bat` - Install/upgrade tools on remote systems
+- `install_upgrade_tools_remoto.sh` - Linux installation script
+
+## References
+
+- [SVM GitHub Repository](https://github.com/simplevulnerabilitymanager/svm)
+- [curl Documentation](https://curl.se/docs/)
+
+## Notes
+
+- The script always downloads the latest `master` branch version
+- Updates are non-interactive and fully automated
+- Script execution is safe to run multiple times
+- No version checking - always downloads latest version
+- Compatible with all Windows versions that support batch files
+- Requires curl.exe for Windows (included with SVM distribution)

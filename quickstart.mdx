@@ -1,80 +1,441 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start Guide
+description: Get started with SVM by running your first vulnerability scan and generating a professional security report
 ---
 
-## Get started in three steps
+# Quick Start Guide
 
-Get your documentation site running locally and make your first customization.
+This guide will walk you through creating your first project, running a vulnerability scan, and generating a comprehensive security report using Simple Vulnerability Manager.
 
-### Step 1: Set up your local environment
+<Info>
+  **Prerequisites**: Make sure you have [installed SVM](/installation) and at least one scanning tool (OpenVAS, Nmap, or Nessus recommended).
+</Info>
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+## Your First Security Assessment
+
+<Steps>
+  <Step title="Launch SVM">
+    Start the Simple Vulnerability Manager application.
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    **Windows**: Launch from Start Menu or run `svm.exe`
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    **Linux**: Execute from installation directory
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    You'll see the main SVM interface with access to:
+    - Project management
+    - Vulnerability database
+    - Scanning tools
+    - Reporting features
+  </Step>
+  
+  <Step title="Create a New Project">
+    Projects in SVM organize your security assessments per client or target.
+    
+    1. Click **"New Project"** or navigate to the Projects section
+    2. Enter project details:
+       - **Project Name**: e.g., "Acme Corp Security Assessment"
+       - **Client Name**: Organization being assessed
+       - **Description**: Brief overview of the assessment scope
+       - **Target IP/Domain**: The system you're testing
+    3. Click **"Create"** to initialize the project
+    
+    <Note>
+      All scan results, screenshots, and notes will be associated with this project for organized reporting.
+    </Note>
+  </Step>
+  
+  <Step title="Configure Your Target">
+    Specify what you want to scan:
+    
+    **Target Types**:
+    - **Single IP**: `192.168.1.100`
+    - **Multiple IPs**: `192.168.1.100,192.168.1.101`
+    - **IP Range**: `192.168.1.1-192.168.1.254`
+    - **Domain**: `example.com`
+    - **URL**: `https://example.com`
+    
+    Add the target to your project and select the assessment type:
+    - Web Application Security
+    - Infrastructure/Service Scanning
+    - Mobile Application Security
+  </Step>
+  
+  <Step title="Select a Scanning Tool">
+    Choose the appropriate scanner for your assessment:
+    
+    ### For Infrastructure Scanning
+    
+    <Tabs>
+      <Tab title="OpenVAS">
+        **Best for**: Comprehensive vulnerability assessment
+        
+        1. Select **"OpenVAS Scan"** from the tools menu
+        2. Configure scan parameters:
+           - **Server**: OpenVAS server IP (default: `127.0.0.1`)
+           - **Port**: OpenVAS port (default: `9390`)
+           - **Username**: `admin`
+           - **Password**: `OpenVAS` (default, change if modified)
+           - **Scan Config**: Choose from:
+             - Full and fast
+             - Full and deep
+             - System Discovery
+           - **Report Format**: HTML, PDF, or XML
+        3. Click **"Start Scan"**
+        
+        <Info>
+          OpenVAS scans can take 30 minutes to several hours depending on the target size and scan configuration.
+        </Info>
+      </Tab>
+      
+      <Tab title="Nmap">
+        **Best for**: Network discovery and port scanning
+        
+        1. Select **"Nmap Scan"** from the tools menu
+        2. The scan automatically includes:
+           - Service version detection (`-sV`)
+           - OS detection (`-O`)
+           - Default scripts (`-sC`)
+           - Comprehensive port coverage (TCP 1-65535, common UDP)
+        3. Click **"Start Scan"**
+        
+        **Example Scan Command**:
+        ```bash
+        nmap -Pn -O --system-dns -vv -sS -sC -sV \
+          -pT:1-65535,U:7,9,13,17,19,21,37,53,67-69,98,111,121,123,135,137-138,161 \
+          -oA "NmapReport" 192.168.1.100
+        ```
+      </Tab>
+      
+      <Tab title="Nessus">
+        **Best for**: Enterprise vulnerability management
+        
+        1. Select **"Nessus Scan"** from the tools menu
+        2. Configure Nessus connection:
+           - Nessus server URL
+           - API credentials
+           - Scan policy
+        3. Click **"Start Scan"**
+      </Tab>
+    </Tabs>
+    
+    ### For Web Application Scanning
+    
+    <CardGroup cols={2}>
+      <Card title="Burp Suite" icon="spider-web">
+        Manual and automated web app testing with proxy capabilities
+      </Card>
+      <Card title="Arachni" icon="bug">
+        Automated web application security scanner
+      </Card>
+      <Card title="Acunetix" icon="shield-check">
+        Commercial web vulnerability scanner
+      </Card>
+      <Card title="Netsparker" icon="radar">
+        Automated web application security scanner
+      </Card>
+    </CardGroup>
+    
+    ### For Mobile Security
+    
+    <CardGroup cols={2}>
+      <Card title="MobSF" icon="mobile">
+        Static and dynamic analysis for Android/iOS apps
+      </Card>
+      <Card title="QARK" icon="android">
+        Quick Android Review Kit for APK analysis
+      </Card>
+    </CardGroup>
+  </Step>
+  
+  <Step title="Monitor Scan Progress">
+    SVM displays real-time scan progress:
+    
+    - **Scanning Status**: Active, Queued, or Completed
+    - **Progress Indicator**: Percentage complete (for supported tools)
+    - **Time Elapsed**: Duration of current scan
+    - **Vulnerabilities Found**: Live count during scan
+    
+    <Warning>
+      Do not close SVM while a scan is in progress. You can minimize it and continue working.
+    </Warning>
+    
+    **Typical Scan Durations**:
+    - **Nmap**: 5-30 minutes
+    - **OpenVAS (Full & Fast)**: 30-90 minutes
+    - **OpenVAS (Full & Deep)**: 2-6 hours
+    - **Web scanners**: 15 minutes to 2 hours
+  </Step>
+  
+  <Step title="Review Scan Results">
+    Once the scan completes, SVM automatically processes the results:
+    
+    1. **View Summary**: See vulnerability count by severity
+       - Critical
+       - High
+       - Medium
+       - Low
+       - Informational
+    
+    2. **Browse Vulnerabilities**: Click on any finding to see:
+       - Detailed description
+       - Affected systems/services
+       - CVSS score
+       - CVE references
+       - Exploit availability
+    
+    3. **Add Evidence**: For each vulnerability:
+       - Add custom notes and observations
+       - Upload screenshots
+       - Mark false positives
+       - Assign remediation priority
+  </Step>
+  
+  <Step title="Enhance with Vulnerability Database">
+    SVM's built-in database provides comprehensive vulnerability information:
+    
+    1. Navigate to **Vulnerability Database**
+    2. Browse categories:
+       - **Web Scanners**: XSS, SQLi, CSRF, authentication issues
+       - **Service Scanners**: Misconfigurations, missing patches, weak protocols
+       - **Static Scanners**: Code quality and security issues
+       - **Mobile**: Android/iOS specific vulnerabilities
+    
+    3. For detected vulnerabilities, add from database:
+       - Click **"Add to Project"**
+       - Review the pre-filled information:
+         - What creates the problem
+         - System impact
+         - Remediation steps
+       - Customize for your specific finding
+    
+    <Info>
+      The vulnerability database is continuously updated with the latest security research and remediation guidance.
+    </Info>
+  </Step>
+  
+  <Step title="Generate Professional Report">
+    Create a comprehensive security assessment report:
+    
+    1. Select **"Generate Report"** from the project menu
+    2. Choose report format:
+       - **HTML**: Interactive web-based report
+       - **PDF**: Professional document for distribution
+       - **Word**: Customizable template (uses Template_SVM.dotx)
+       - **XML**: For integration with other tools
+    
+    3. Configure report options:
+       - Include executive summary
+       - Add technical details
+       - Attach screenshots and evidence
+       - Filter by severity level
+       - Include remediation timeline
+    
+    4. Click **"Generate"**
+    
+    **Example OpenVAS Report Process**:
+    ```bash
+    # Report is automatically generated after scan completion
+    # Saved to: [Project Documentation]/OpenvasReport - [Timestamp].html
+    ```
+    
+    **Example Nmap Report Process**:
+    ```bash
+    # XML output is transformed to HTML using XSLT
+    # Saved to: [Project Documentation]/NmapReport - [Timestamp].html
+    ```
+  </Step>
+  
+  <Step title="Review and Deliver">
+    Your report is now ready:
+    
+    1. **Preview**: SVM automatically opens the report for review
+    2. **Validate**: Ensure all findings are accurate and properly documented
+    3. **Export**: Save to your preferred location
+    4. **Share**: Deliver to your client or security team
+    
+    <Note>
+      Reports include:
+      - Executive summary with risk overview
+      - Detailed findings with evidence
+      - Remediation recommendations
+      - Technical appendices
+      - Scan metadata and methodology
+    </Note>
+  </Step>
+</Steps>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## Example Workflow: OpenVAS Infrastructure Scan
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+Here's a complete example of scanning a server with OpenVAS:
 
-### Step 3: Go live
+```bash
+# The scan process (handled automatically by SVM)
+# 1. Create target in OpenVAS
+omp --host=127.0.0.1 --port=9390 --username=admin --password=OpenVAS \
+  --xml="<create_target><name>WebServer-2024</name><hosts>192.168.1.100</hosts></create_target>"
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+# 2. Create scan task
+omp --xml="<create_task><name>WebServer-2024</name><config id='[scan-config-id]'></config></create_task>"
 
-## Next steps
+# 3. Start scan
+omp --xml="<start_task task_id='[task-id]'></start_task>"
 
-Now that you have your docs running, explore these key features:
+# 4. Monitor progress
+# SVM polls every 60 seconds until status = "Done"
+
+# 5. Generate report
+omp --xml="<get_reports report_id='[report-id]' format_id='[html-format]'/>"
+
+# 6. Decode and save
+# Report saved to: /tmp/OpenvasReport - [Timestamp].html
+```
+
+<Info>
+  SVM automates this entire process. The commands above show what happens behind the scenes.
+</Info>
+
+## Example Workflow: Nmap Network Discovery
+
+```bash
+# Quick network scan with service detection
+nmap -Pn -O --system-dns -vv -sS -sC -sV \
+  -oA "NetworkDiscovery" \
+  -pT:1-65535,U:53,161,500 \
+  192.168.1.0/24
+
+# Output files:
+# - NetworkDiscovery.xml (machine readable)
+# - NetworkDiscovery.html (transformed by SVM)
+# - NetworkDiscovery.nmap (human readable text)
+```
+
+## Best Practices
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Authorization" icon="file-contract">
+    **Always obtain written permission** before scanning any system you don't own. Unauthorized scanning may be illegal.
+  </Card>
+  
+  <Card title="Scope Definition" icon="bullseye-arrow">
+    Clearly define the assessment scope in your project. Document:
+    - Target systems
+    - Allowed testing methods
+    - Excluded systems
+    - Testing timeframes
+  </Card>
+  
+  <Card title="Evidence Collection" icon="camera">
+    Take screenshots and detailed notes for every finding. This evidence:
+    - Validates vulnerabilities
+    - Helps in remediation
+    - Protects against disputes
+  </Card>
+  
+  <Card title="Safe Scanning" icon="shield-check">
+    Be cautious with aggressive scans:
+    - Start with passive reconnaissance
+    - Use "Full and Fast" before "Full and Deep"
+    - Schedule intensive scans during maintenance windows
+    - Monitor target systems for issues
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Advanced Features" icon="gears">
+    Explore SVM's advanced capabilities:
+    - Custom vulnerability templates
+    - Multi-target scanning
+    - Scan scheduling
+    - Template customization
+  </Card>
+  
+  <Card title="Tool Integration" icon="plug">
+    Learn how to integrate additional tools:
+    - Custom scanner scripts
+    - API integrations
+    - Remote scanning setup
+  </Card>
+  
+  <Card title="FAQ & Wiki" icon="book" href="https://github.com/simplevulnerabilitymanager/svm/wiki">
+    Browse common questions and solutions in the community wiki
+  </Card>
+  
+  <Card title="Join the Community" icon="users" href="https://twitter.com/SimpleVulnManag">
+    Connect with other SVM users and stay updated on new features
+  </Card>
+</CardGroup>
+
+## Troubleshooting Common Issues
+
+<AccordionGroup>
+  <Accordion title="Scan fails to start">
+    **Possible causes**:
+    - Tool not properly installed or configured
+    - Incorrect credentials (OpenVAS, Nessus)
+    - Target not reachable
+    - Firewall blocking scanner
+    
+    **Solutions**:
+    1. Verify tool installation: Check the tool appears in SVM's available scanners
+    2. Test connectivity: Ping the target and ensure ports are accessible
+    3. Check credentials: Verify OpenVAS/Nessus login works manually
+    4. Review firewall rules: Ensure scanning traffic is permitted
+  </Accordion>
+  
+  <Accordion title="OpenVAS Internal Error">
+    **Error**: Scan status shows "Internal Error"
+    
+    **Solutions**:
+    ```bash
+    # Restart OpenVAS services
+    sudo service openvas-scanner restart
+    sudo service openvas-manager restart
+    sudo service greenbone-security-assistant restart
+    
+    # Verify OpenVAS is running
+    sudo systemctl status openvas-scanner
+    sudo systemctl status openvas-manager
+    ```
+  </Accordion>
+  
+  <Accordion title="Report not generating">
+    **Possible causes**:
+    - Scan did not complete successfully
+    - Report format not supported by scanner
+    - Insufficient disk space
+    
+    **Solutions**:
+    1. Verify scan reached "Done" status
+    2. Check SVM logs for error messages
+    3. Ensure output directory is writable
+    4. Try alternative report format
+  </Accordion>
+  
+  <Accordion title="No vulnerabilities found">
+    **This might be normal**, but verify:
+    - Target is responding to probes
+    - Scan configuration is appropriate (not too conservative)
+    - Firewall isn't blocking scan traffic
+    - Target is actually vulnerable (test with known-vulnerable systems)
+    
+    Run a basic connectivity test:
+    ```bash
+    nmap -Pn -p 80,443,22,21,3306 [target-ip]
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Support
+
+Need help? Here are your resources:
+
+- **FAQ**: [GitHub Wiki](https://github.com/simplevulnerabilitymanager/svm/wiki)
+- **Community**: [@SimpleVulnManag on Twitter](https://twitter.com/SimpleVulnManag)
+- **Issues**: [GitHub Issues](https://github.com/simplevulnerabilitymanager/svm/issues)
+- **Enterprise Support**: [contacto@simplevulnerabilitymanager.com](mailto:contacto@simplevulnerabilitymanager.com)
+
+---
+
+You're now ready to perform comprehensive security assessments with Simple Vulnerability Manager. Happy scanning!

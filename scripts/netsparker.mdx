@@ -1,0 +1,219 @@
+---
+title: Netsparker Scanner Script
+description: Documentation for netsparker_scan.bat automated web vulnerability scanning
+---
+
+Automated Netsparker scanning script with concurrent scan management and profile-based configuration.
+
+## Overview
+
+The `netsparker_scan.bat` script launches Netsparker in automated mode using pre-configured scanning profiles. It manages concurrent scans to prevent resource exhaustion.
+
+## Parameters
+
+| Parameter | Position | Description |
+|-----------|----------|-------------|
+| `Proyecto` | 1 | Project name (must match a Netsparker profile name) |
+| `Netsparker` | 2 | Path to Netsparker.exe executable |
+| `URL` | 3 | Target URL to scan |
+| `Documentacion` | 4 | Output directory for HTML reports |
+| `Timestamp` | 5 | Timestamp for file naming |
+| `NRO` | 6 | Scan number (used for staggered start delay) |
+
+## Usage
+
+```batch
+netsparker_scan.bat "MyWebApp" "C:\Program Files\Netsparker\Netsparker.exe" ^
+  "http://example.com" "C:\Reports" "20260303_120000" "1"
+```
+
+## Script Behavior
+
+### Staggered Start
+
+The script delays execution based on the NRO parameter:
+```batch
+SLEEP = NRO × 20 seconds
+```
+
+Examples:
+- NRO=1 → 20 second delay
+- NRO=2 → 40 second delay  
+- NRO=5 → 100 second delay
+
+This prevents multiple scans from starting simultaneously.
+
+### Concurrent Scan Limiting
+
+The script limits concurrent Netsparker instances to **maximum 2**:
+
+```batch
+tasklist /FI "IMAGENAME eq Netsparker.exe" /NH | find /C "Netsparker.exe"
+```
+
+If 2 or more instances are running:
+- Script waits 60 seconds
+- Rechecks process count
+- Repeats until a slot is available
+
+### Netsparker Command
+
+Once a slot is available, the script launches:
+
+```batch
+Netsparker.exe /auto /profile "PROJECT_NAME" /url URL /report "OUTPUT.html"
+```
+
+**Parameters:**
+- `/auto` - Automated scan mode (no GUI interaction)
+- `/profile "PROJECT_NAME"` - Use the specified scanning profile
+- `/url URL` - Target URL to scan
+- `/report "PATH.html"` - Output HTML report location
+
+## Scanning Profiles
+
+### Profile Requirement
+
+<Warning>
+The `Proyecto` parameter must match an existing Netsparker scanning profile name exactly. If the profile does not exist, the scan will fail.
+</Warning>
+
+### Creating Profiles in Netsparker
+
+1. Open Netsparker GUI
+2. Configure scan settings (authentication, crawling, policies)
+3. Save as a named profile
+4. Use that exact name as the `Proyecto` parameter
+
+### Profile Components
+
+Profiles can include:
+- Authentication credentials
+- Crawling scope and depth
+- Scan policies and checks
+- Form filling rules
+- Custom headers and cookies
+- Performance settings
+
+## Output Files
+
+Generated report format:
+```
+NetsparkerReport - {Timestamp}-URL_{NRO}.html
+```
+
+Example:
+```
+NetsparkerReport - 20260303_120000-URL_1.html
+```
+
+## Example Usage Scenarios
+
+### Single Scan
+
+```batch
+netsparker_scan.bat "ProductionProfile" ^
+  "C:\Program Files\Netsparker\Netsparker.exe" ^
+  "https://webapp.company.com" ^
+  "D:\ScanReports" ^
+  "20260303_143000" ^
+  "1"
+```
+
+### Multiple URLs with Staggered Start
+
+Scan 3 URLs with 20-second intervals:
+
+```batch
+rem URL 1 - starts immediately
+start netsparker_scan.bat "MyProfile" "C:\...\Netsparker.exe" "http://site1.com" "C:\Reports" "20260303_150000" "1"
+
+rem URL 2 - starts after 40 seconds
+start netsparker_scan.bat "MyProfile" "C:\...\Netsparker.exe" "http://site2.com" "C:\Reports" "20260303_150000" "2"
+
+rem URL 3 - starts after 60 seconds  
+start netsparker_scan.bat "MyProfile" "C:\...\Netsparker.exe" "http://site3.com" "C:\Reports" "20260303_150000" "3"
+```
+
+### Different Profiles for Different Apps
+
+```batch
+rem Authenticated scan
+netsparker_scan.bat "AuthenticatedProfile" "C:\...\Netsparker.exe" ^
+  "https://secure.app.com" "C:\Reports" "20260303_160000" "1"
+
+rem Public-facing scan
+netsparker_scan.bat "PublicProfile" "C:\...\Netsparker.exe" ^
+  "https://public.app.com" "C:\Reports" "20260303_160000" "2"
+```
+
+## Prerequisites
+
+<Note>
+- **Netsparker Standard or Enterprise** with valid license
+- Scanning profile must be pre-configured with the exact name used in `Proyecto`
+- Sufficient disk space in `Documentacion` directory for HTML reports
+- Windows system with administrative privileges (for process listing)
+</Note>
+
+## Temporary Files
+
+The script creates a temporary file to track scan counts:
+```
+%TEMP%\netsparker_scan_count_{Timestamp}-URL_{NRO}.txt
+```
+
+This file is automatically deleted upon completion.
+
+## Limitations
+
+<Warning>
+- Maximum 2 concurrent scans (hardcoded limit)
+- Only HTML report format is generated
+- Profile must exist before running the script
+- No error handling for missing profiles
+</Warning>
+
+## Troubleshooting
+
+### Profile Not Found Error
+
+If Netsparker reports "Profile not found":
+1. Open Netsparker GUI
+2. Check **File** > **Manage Scanning Profiles**
+3. Verify the profile name matches exactly (case-sensitive)
+4. Create the profile if it doesn't exist
+
+### Scan Hangs Waiting for Slot
+
+If the script waits indefinitely:
+1. Check Task Manager for orphaned Netsparker.exe processes
+2. Manually terminate stuck processes
+3. Script will automatically proceed
+
+### Missing Reports
+
+If reports are not generated:
+- Verify `Documentacion` path exists and is writable
+- Check Netsparker scan completed successfully
+- Review Netsparker logs for errors
+
+## Performance Tuning
+
+### Adjusting Concurrent Limit
+
+To allow more concurrent scans, modify the limit at netsparker_scan.bat:28:
+
+```batch
+rem Change from 2 to 4 concurrent scans
+if %CANT% GEQ 4 ( ping -n 61 127.0.0.1 > NUL && goto :while1 ) else ( ... )
+```
+
+### Adjusting Stagger Delay
+
+To change the delay multiplier, modify netsparker_scan.bat:17:
+
+```batch
+rem Change from 20 to 30 seconds per NRO
+set /a SLEEP=%NRO%*30
+```

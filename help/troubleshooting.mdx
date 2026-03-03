@@ -1,0 +1,863 @@
+---
+title: Troubleshooting Guide
+description: Common issues and solutions for Simple Vulnerability Manager
+---
+
+## Installation Issues
+
+<Accordion title="Missing dependencies after installation">
+**Problem:** Application fails to start or features don't work.
+
+**Solution:**
+Most dependencies are included with SVM, but you may need:
+
+1. **Microsoft Office** (Word and Excel)
+   - Required for report generation and Excel exports
+   - Error handling improved in v2.0.2 to provide clear messages
+   - Alternative: Use other reporting methods if Office unavailable
+
+2. **External scanning tools**
+   - Use Tools → Install/Update Tools to download required tools
+   - Each tool has specific installation requirements
+   - Check tool documentation for prerequisites
+
+3. **Wine dependencies (Linux/MacOS)**
+   - MacOS: Install XQuartz 2.7.11 or later
+   - Linux: Install required Wine packages for your distribution
+</Accordion>
+
+<Accordion title="Installer fails on Debian 9 or other Linux distributions">
+**Problem:** Installation or tool detection fails on Linux.
+
+**Solution (v2.0.3+):**
+Environment detection was improved for Debian 9 and other distributions.
+
+1. Update to SVM v2.0.3 or later
+2. Ensure Wine is properly installed
+3. For Debian/Ubuntu: `sudo apt-get install wine wine32 wine64`
+4. Install required dependencies: `xmlstarlet`, `omp`, `netstat`
+
+Check the install scripts for distribution-specific requirements.
+</Accordion>
+
+## Wine Compatibility Issues
+
+<Accordion title="Connection errors with SVM Pro server on Wine (Linux/MacOS)">
+**Problem:** "Lost connection to server" or connection failures when using SVM Pro.
+
+**Symptoms:**
+- Cannot connect to remote SVM server
+- Intermittent disconnections
+- Data sync failures
+
+**Solution (Fixed in v2.1.0):**
+These critical Wine compatibility issues were resolved:
+
+1. Update to SVM v2.1.0 or later
+2. Verify network connectivity to server
+3. Check firewall settings allow outbound connections
+4. Test with demo server: `svm.myddns.me:8444` (token: `svm_demo`)
+
+<Note>Version 2.1.0 includes major improvements for Wine connection handling.</Note>
+</Accordion>
+
+<Accordion title="SVM hangs when opening Word documents on Wine">
+**Problem:** Application freezes when generating reports or opening Word files.
+
+**Solution (Fixed in v2.1.0):**
+An issue with temporary Word files was resolved in v2.1.0:
+
+1. Update to SVM v2.1.0 or later
+2. Ensure Microsoft Word is properly configured in Wine
+3. Check available disk space in temp directory
+4. Close unnecessary Word processes before generating reports
+
+Alternative: Generate reports on Windows if Wine issues persist.
+</Accordion>
+
+<Accordion title="Backup fails with error on Wine">
+**Problem:** Database backup throws an error on Linux/MacOS.
+
+**Solution (Fixed in v2.0.3):**
+1. Update to SVM v2.0.3 or later
+2. Ensure write permissions in backup directory
+3. Check available disk space
+4. Use absolute paths for backup location
+
+Command:
+```bash
+chmod 755 /path/to/backup/directory
+```
+</Accordion>
+
+<Accordion title="Multiple instance exit error on Wine">
+**Problem:** Error when closing second SVM instance on Linux/MacOS.
+
+**Solution (Fixed in v2.0.3):**
+1. Update to SVM v2.0.3 or later
+2. Each instance should use separate configuration files
+3. Ensure proper cleanup of temporary files
+4. Close instances in order (first opened, first closed recommended)
+</Accordion>
+
+<Accordion title="Report generation fails only on Wine">
+**Problem:** Creating vulnerability name reports fails specifically on Wine.
+
+**Solution (Fixed in v2.0.3):**
+1. Update to SVM v2.0.3 or later
+2. Ensure Word template uses the new `Titulo_SVM` style name
+3. Verify template compatibility with Word version
+4. Check Wine's Microsoft Office integration
+
+<Note>Version 2.0.3 introduced a new Word template specifically for Wine compatibility.</Note>
+</Accordion>
+
+## Scanning Tool Issues
+
+### Nessus
+
+<Accordion title="Nessus service not started">
+**Problem:** Error message "Nessus Service no iniciado" when attempting scan.
+
+**Error Detection:**
+Script checks if Nessus service is running at `https://server:port/`
+
+**Solution:**
+1. SSH to the Nessus server
+2. Start the service:
+   ```bash
+   /etc/init.d/nessusd start
+   ```
+3. Verify service is running:
+   ```bash
+   ps aux | grep nessusd
+   ```
+4. Check the service is listening on the configured port (usually 8834)
+</Accordion>
+
+<Accordion title="Nessus login fails or returns null token">
+**Problem:** Authentication fails with `---Error---` or null token.
+
+**Solution:**
+1. Verify username and password in SVM configuration
+2. Check Nessus web interface is accessible
+3. Ensure user account is not locked
+4. Verify Nessus API is enabled
+5. Check for SSL certificate issues (Nessus uses self-signed certs)
+
+<Note>SVM automatically handles invalid certificates for Nessus (v1.1.789+).</Note>
+</Accordion>
+
+<Accordion title="Nessus scan fails to export to XML">
+**Problem:** Export fails or XML file is corrupted.
+
+**Solution (Fixed in v1.1.793+):**
+1. Update to SVM v1.1.793 or later
+2. Verify Nessus scan completed successfully
+3. Check disk space on server and local machine
+4. Review export format settings in configuration
+
+Version 1.1.793 fixed XML export functionality for Nessus.
+</Accordion>
+
+<Accordion title="Nessus browser compatibility issues">
+**Problem:** Cannot access Nessus web interface from SVM browser.
+
+**Solution (Fixed in v1.1.794):**
+User-Agent was modified for Nessus 7 compatibility:
+
+1. Update to SVM v1.1.794 or later
+2. Clear browser cache in SVM
+3. Verify Nessus version compatibility
+4. Use external browser if issues persist
+</Accordion>
+
+### OpenVAS
+
+<Accordion title="OpenVAS script missing required programs">
+**Problem:** Error "Falta el programa xmlstarlet" or "Falta el programa openvas-client(omp)".
+
+**Solution:**
+Install required dependencies on the Linux server:
+
+**Debian/Ubuntu:**
+```bash
+sudo apt-get install xmlstarlet openvas-client
+```
+
+**RedHat/CentOS:**
+```bash
+sudo yum install xmlstarlet openvas-client
+```
+
+Verify installation:
+```bash
+which xmlstarlet
+which omp
+```
+</Accordion>
+
+<Accordion title="OpenVAS authentication errors">
+**Problem:** `---Error. Revise username/password o levante el servicio`
+
+**Solution:**
+1. Verify OpenVAS credentials in SVM configuration
+2. Start OpenVAS services:
+   ```bash
+   service openvas-scanner restart
+   service openvas-manager restart
+   service greenbone-security-assistant restart
+   ```
+3. Check services are running:
+   ```bash
+   ps aux | grep openvas
+   ```
+4. Verify port 9390 is listening:
+   ```bash
+   netstat -tlnp | grep 9390
+   ```
+</Accordion>
+
+<Accordion title="OpenVAS scan errors (Error-1, Error-2, Error-3, Error-4)">
+**Problem:** Generic error codes during OpenVAS scanning.
+
+**Solutions by Error Code:**
+
+**Error-1:** Failed to find target
+- Target ID is invalid or was deleted
+- Re-create the target in OpenVAS
+- Check target configuration
+
+**Error-2:** Task creation failed
+- Invalid scan configuration ID
+- Permission issues with OpenVAS user
+- Check available scan configs
+
+**Error-3:** Cannot retrieve task ID
+- XML parsing error
+- xmlstarlet not working correctly
+- Check OpenVAS API response
+
+**Error-4:** Cannot start task
+- Scanner is busy or offline
+- Check scanner status in Greenbone UI
+- Verify scanner has available slots
+</Accordion>
+
+<Accordion title="OpenVAS initializing or reloading">
+**Problem:** Scan stuck waiting for OpenVAS to finish initializing.
+
+**Expected Behavior:**
+Script waits while displaying:
+- `openvassd: Initializing`
+- `openvassd: Reloaded`
+
+**Solution:**
+This is normal during:
+- First OpenVAS startup
+- After plugin updates
+- After configuration changes
+
+Wait for initialization to complete (can take 5-60 minutes depending on system).
+
+To check status:
+```bash
+ps ax | grep "openvassd: Initializing"
+ps ax | grep "openvassd: Reloaded"
+```
+</Accordion>
+
+<Accordion title="OpenVAS remote script file copy errors">
+**Problem:** Scripts fail to copy to remote server (Error-1 or Error-2).
+
+**Solution (Fixed in v1.1.794+):**
+1. Update to SVM v1.1.794 or later (file copy improved)
+2. Verify SSH credentials
+3. Check /tmp directory permissions on remote server:
+   ```bash
+   ls -ld /tmp
+   chmod 1777 /tmp
+   ```
+4. Ensure pscp.exe and plink.exe are in SVM directory
+5. Test manual SSH connection:
+   ```bash
+   ssh username@server
+   ```
+</Accordion>
+
+<Accordion title="OpenVAS on Ubuntu for Windows 10">
+**Problem:** Script fails on Ubuntu for Windows 10 (WSL).
+
+**Solution (Fixed in v1.1.792+):**
+OpenVAS remote script was modified to support Ubuntu for Windows 10:
+
+1. Update to SVM v1.1.792 or later
+2. Install OpenVAS in WSL environment
+3. Script auto-detects WSL and adjusts commands
+4. Use `ss` instead of `netstat` if available
+
+Reference: [OpenVAS on Ubuntu for Windows 10](https://goo.gl/GxAvW3)
+</Accordion>
+
+### Qualys
+
+<Accordion title="Qualys authentication failures">
+**Problem:** "Mal Usuario/Contraseña" error.
+
+**Solution:**
+1. Verify Qualys API credentials in SVM configuration
+2. Check account is not locked
+3. Ensure API access is enabled for account
+4. Verify subscription is active
+5. Test credentials via Qualys web interface
+</Accordion>
+
+<Accordion title="Qualys planned maintenance">
+**Problem:** "Qualys Planned Maintenance" message.
+
+**Solution:**
+This indicates Qualys is undergoing scheduled maintenance:
+
+1. Check [Qualys Status Page](https://status.qualys.com/)
+2. Wait for maintenance window to complete
+3. Retry scan after maintenance
+4. Schedule scans to avoid known maintenance windows
+</Accordion>
+
+<Accordion title="Qualys API rate limiting">
+**Problem:** "This API cannot be run again for another" or "This limit has already been reached".
+
+**Solution:**
+Qualys enforces API rate limits:
+
+1. **Wait Period:** Wait for the time specified in the error
+2. **Daily Limits:** Check your subscription's daily scan limits
+3. **Concurrent Scans:** Reduce number of simultaneous scans
+4. **Subscription:** Upgrade subscription for higher limits
+
+<Warning>Free/Community editions have strict rate limits.</Warning>
+</Accordion>
+
+<Accordion title="Qualys cannot scan private IP addresses">
+**Problem:** Cannot scan internal network ranges with External scanner.
+
+**Solution (v1.1.788+):**
+An informative message was added in v1.1.788:
+
+1. Use Qualys Internal Appliances instead of External
+2. Configure internal scanner in your Qualys account
+3. Ensure appliance has network access to target IPs
+4. Private IP ranges (RFC 1918):
+   - 10.0.0.0/8
+   - 172.16.0.0/12
+   - 192.168.0.0/16
+
+External scanners can only scan public IP addresses.
+</Accordion>
+
+<Accordion title="Qualys IP not in asset list">
+**Problem:** Message "La ip no esta en Qualys. Agregando..."
+
+**Expected Behavior:**
+This is normal when scanning a new IP address:
+
+1. SVM detects IP is not in Qualys asset inventory
+2. Automatically adds IP to asset list
+3. Waits briefly for propagation
+4. Retries scan launch
+
+**If this fails repeatedly:**
+- Manually add IP via Qualys web interface
+- Verify account permissions allow asset addition
+- Check IP format is valid
+</Accordion>
+
+<Accordion title="Qualys configuration retrieval fails">
+**Problem:** Error when fetching scan configurations or report templates.
+
+**Solution (v1.1.791+):**
+Error description was improved in v1.1.791:
+
+1. Check error message for specific failure reason
+2. Common causes:
+   - Authentication failure (check credentials)
+   - Permission issues (verify account role)
+   - Network connectivity
+   - API endpoint unavailable
+
+3. Test connectivity:
+   ```bash
+   curl -u username:password https://qualysapi.qualys.com/api/2.0/fo/scan/
+   ```
+</Accordion>
+
+### Acunetix
+
+<Accordion title="Acunetix target creation fails">
+**Problem:** "Error: Generando Target" message.
+
+**Solution:**
+1. Verify Acunetix API URL and API Key in configuration
+2. Check Acunetix service is running
+3. Ensure API access is enabled
+4. Verify URL format includes protocol (http:// or https://)
+5. Check for SSL certificate issues
+
+Test API connection:
+```bash
+curl -k -H "X-Auth: YOUR_API_KEY" https://acunetix-server:3443/api/v1/targets
+```
+</Accordion>
+
+<Accordion title="Acunetix scan fails to start">
+**Problem:** "Error: Iniciando Scan" message.
+
+**Solution:**
+1. Verify target was created successfully
+2. Check scanner has available capacity
+3. Ensure target URL is accessible from scanner
+4. Review Acunetix logs for detailed error
+5. Verify scan profile ID is valid
+
+Available scan profiles:
+- Full Scan: `11111111-1111-1111-1111-111111111111`
+- High Risk: `11111111-1111-1111-1111-111111111112`
+- XSS: `11111111-1111-1111-1111-111111111116`
+- SQL Injection: `11111111-1111-1111-1111-111111111113`
+</Accordion>
+
+<Accordion title="Acunetix scan stops unexpectedly">
+**Problem:** Scan status shows "failed", "aborting", or null.
+
+**Solutions by Status:**
+
+**failed:** 
+- Check target is accessible
+- Review Acunetix scanner logs
+- Verify sufficient disk space
+- Check for conflicting scans
+
+**aborting:**
+- User manually stopped scan
+- System resource limits reached
+- Scanner encountered critical error
+
+**null (stopped):**
+- Connection to Acunetix lost
+- API authentication expired
+- Service restarted during scan
+</Accordion>
+
+<Accordion title="Acunetix v10.5 remote scanning removed">
+**Problem:** Cannot find Acunetix 10.5 remote scanning option.
+
+**Solution (Changed in v1.1.792):**
+Acunetix 10.5 remote scanning was removed and replaced with v11 API:
+
+1. Upgrade to Acunetix 11 or later
+2. Use Acunetix 11 API scanning instead
+3. For local Acunetix 10.5: Use local scanning option
+4. Windows credentials configuration was also removed
+
+<Note>Acunetix 11+ uses API-based scanning which is more reliable and feature-rich.</Note>
+</Accordion>
+
+<Accordion title="Acunetix target creation error (Fixed in v2.0.1)">
+**Problem:** Error when creating target in Acunetix.
+
+**Solution:**
+Update to SVM v2.0.1 or later. This version fixed a specific issue with Acunetix target creation.
+
+If still experiencing issues:
+1. Verify URL includes protocol (http:// or https://)
+2. Check for special characters in URL
+3. Ensure target domain is resolvable
+4. Review Acunetix API documentation for URL format
+</Accordion>
+
+## Report Generation Issues
+
+<Accordion title="Word or Excel not installed error">
+**Problem:** Error when generating reports or exporting data.
+
+**Solution (Improved in v2.0.2+):**
+Error messages were improved to clearly indicate Office requirements:
+
+1. Install Microsoft Office (Word and Excel)
+2. Ensure Office is properly activated
+3. For Wine: Install Office in Wine environment
+4. Check Office version compatibility (2010 or later recommended)
+
+<Warning>SVM requires Microsoft Office for report generation. Open source alternatives are not supported.</Warning>
+</Accordion>
+
+<Accordion title="Report variable not replaced ([Subtitulo] shows in report)">
+**Problem:** Variables like [Subtitulo] or [Proyecto] appear in generated report.
+
+**Solution (Fixed in v2.0.2+):**
+1. Update to SVM v2.0.2 or later
+2. Verify variable names match exactly in template
+3. Supported variables:
+   - `[Proyecto]` - Project name
+   - `[Subtitulo]` - Subtitle
+   - Other custom variables defined in template
+
+4. Variables can now be used in vulnerability details (v1.1.789+)
+</Accordion>
+
+<Accordion title="Invalid character in project name prevents report generation">
+**Problem:** Report generation fails with file name error.
+
+**Solution (Fixed in v2.1.2):**
+SVM now handles invalid file name characters automatically:
+
+1. Update to SVM v2.1.2 or later
+2. Avoid these characters in project names: `\ / : * ? " < > |`
+3. Invalid characters are automatically replaced in report filenames
+4. Project name in database remains unchanged
+
+Example: Project `Test/Project?` creates report file `Test_Project_.docx`
+</Accordion>
+
+<Accordion title="Evidence images appear above vulnerability description">
+**Problem:** Evidence screenshots are positioned incorrectly in report.
+
+**Solution (Fixed in v2.0.0+):**
+Report layout was improved in v2.0.0:
+
+1. Update to SVM v2.0.0 or later
+2. Evidence now appears below vulnerability description
+3. Use updated Word template
+4. Check template styles if using custom template
+</Accordion>
+
+<Accordion title="Very large reports show 'other application is busy' error">
+**Problem:** Error message when generating reports over 200 pages.
+
+**Solution (Fixed in v1.1.792+):**
+A timeout issue with large reports was resolved:
+
+1. Update to SVM v1.1.792 or later
+2. For extremely large reports:
+   - Increase Word's available memory
+   - Close other Office applications
+   - Generate reports in sections
+   - Combine manually if needed
+
+3. Consider splitting very large projects into multiple reports
+</Accordion>
+
+<Accordion title="Window resizing issues with reports">
+**Problem:** Controls don't restore to original position after resizing.
+
+**Solution (Fixed in v2.0.2):**
+1. Update to SVM v2.0.2 or later
+2. Reset window to default size
+3. Restart SVM if controls remain misaligned
+4. Check display scaling settings (150%+ can cause issues)
+</Accordion>
+
+## Database and Configuration
+
+<Accordion title="Configuration not saving properly">
+**Problem:** Settings revert after closing SVM.
+
+**Solution (Fixed in v2.0.1 and v2.0.3+):**
+Multiple configuration bugs were fixed:
+
+**v2.0.1:** Recon-ng and EyeWitness configuration
+**v2.0.3:** General configuration saving
+
+1. Update to SVM v2.0.3 or later
+2. Verify write permissions on svm.ini file
+3. Check svm.ini is not read-only
+4. Use CTRL+S shortcut to save (v1.1.788+)
+
+Location: Same directory as svm.exe
+</Accordion>
+
+<Accordion title="Cannot upload vulnerabilities">
+**Problem:** Upload button disabled or not working.
+
+**Solution (Fixed in v2.1.4):**
+1. Update to SVM v2.1.4 - this specifically fixes the upload button
+2. Ensure project is selected before uploading
+3. Check network connectivity for SVM Pro
+4. Verify file format is correct
+5. Review file size limits
+</Accordion>
+
+<Accordion title="Critical vulnerabilities not exported to Excel">
+**Problem:** Critical risk vulnerabilities missing from Excel export.
+
+**Solution (Fixed in v2.1.0):**
+1. Update to SVM v2.1.0 or later
+2. Ensure filter includes all risk levels
+3. Check vulnerability classification is correct
+4. Verify Excel export settings in configuration
+</Accordion>
+
+<Accordion title="IP range search fails with dash character">
+**Problem:** Searching IP range like "192.168.1.1-192.168.1.100" fails.
+
+**Solution (Fixed in v1.1.792+):**
+1. Update to SVM v1.1.792 or later
+2. IP range searches now properly parse dash character
+3. Supported formats:
+   - Single IP: `192.168.1.1`
+   - Range: `192.168.1.1-192.168.1.100`
+   - CIDR: Check if supported in your version
+</Accordion>
+
+## Tool Management Issues
+
+<Accordion title="Cannot rename vulnerability from toolbar">
+**Problem:** Rename button doesn't work in ServicesScan or Fortify.
+
+**Solution (Fixed in v2.1.1):**
+1. Update to SVM v2.1.1 or later
+2. Select vulnerability before clicking rename
+3. Ensure project is not read-only
+4. Check permissions for database modifications
+</Accordion>
+
+<Accordion title="Drag and drop for images not working">
+**Problem:** Cannot drag images into evidence or screenshots.
+
+**Solution (Added in v2.1.2):**
+Drag and drop was added in v2.1.2:
+
+1. Update to SVM v2.1.2 or later
+2. Drag image files directly from Explorer
+3. Supported formats: PNG, JPG, BMP, GIF
+4. Alternatively, use Browse button for compatibility
+</Accordion>
+
+<Accordion title="Text field character limits">
+**Problem:** Cannot enter enough text in IP, Web, Notes, Request, or Response fields.
+
+**Solution (Expanded in v2.1.0):**
+Field capacity was significantly increased:
+
+1. Update to SVM v2.1.0 or later
+2. All text fields now support more content
+3. Full Unicode support for international characters
+4. Large evidence notes are now possible
+</Accordion>
+
+<Accordion title="OWASP Mobile controls don't restore after zoom">
+**Problem:** Controls remain enlarged after using Zoom+ feature.
+
+**Solution (Fixed in v2.0.3):**
+1. Update to SVM v2.0.3 or later
+2. Use Zoom- to restore controls
+3. Restart SVM if controls don't restore
+4. Check display DPI settings
+</Accordion>
+
+## Network and Connection Issues
+
+<Accordion title="Cannot access project or vulnerability management without project">
+**Problem:** Menu options disabled or error when accessing features.
+
+**Solution (Enforced in v1.1.792+):**
+This is expected behavior to prevent errors:
+
+1. Create a new project or select existing project first
+2. Project selection is now required for:
+   - Vulnerability management
+   - Scanning operations
+   - Report generation
+   - Evidence management
+
+This prevents data consistency issues.
+</Accordion>
+
+<Accordion title="Web URLs without protocol fail to launch tools">
+**Problem:** Error when launching web scanners.
+
+**Solution (Enforced in v1.1.791+):**
+Web URLs must include protocol:
+
+**Correct formats:**
+- `http://example.com`
+- `https://example.com`
+
+**Incorrect formats:**
+- `example.com`
+- `www.example.com`
+
+Add http:// or https:// prefix to all web addresses before scanning.
+</Accordion>
+
+<Accordion title="Invalid certificates prevent access to tools">
+**Problem:** Cannot access OpenVAS or Nessus web interface.
+
+**Solution (Fixed in v1.1.789+):**
+1. Update to SVM v1.1.789 or later
+2. Invalid certificates are now automatically accepted
+3. For custom certificates: Use `cert_install.bat`
+4. Check firewall allows access to tool ports
+
+<Note>Self-signed certificates are common for security tools and are now handled automatically.</Note>
+</Accordion>
+
+<Accordion title="Nmap cannot resolve domain in IP field">
+**Problem:** Nmap scan fails when domain name used instead of IP.
+
+**Solution (Fixed in v1.1.792+):**
+1. Update to SVM v1.1.792 or later
+2. Nmap now accepts both IPs and domain names
+3. Ensure domain is resolvable:
+   ```bash
+   nslookup example.com
+   ```
+4. Use IP address if DNS resolution fails
+</Accordion>
+
+## Tool-Specific Issues
+
+<Accordion title="Recon-ng API credentials not working">
+**Problem:** Reconnaissance fails or API errors.
+
+**Solution (Fixed in v2.0.3+):**
+1. Update to SVM v2.0.3 or later
+2. Configure API keys in Settings:
+   - SHODAN API key
+   - IPInfoDB key
+   - Other service credentials
+
+3. New modules added (v2.0.1):
+   - certificate_transparency
+   - google_site_web
+   - hackertarget
+   - threatcrowd
+
+4. Domains can be specified without protocol (v2.0.3+)
+
+<Note>API keys must be obtained from respective services.</Note>
+</Accordion>
+
+<Accordion title="Recon-ng executable path error">
+**Problem:** Cannot find Recon-ng executable.
+
+**Solution (Fixed in v2.0.0+):**
+1. Update to SVM v2.0.0 or later
+2. Configure correct Recon-ng installation path in Settings
+3. Verify Recon-ng is installed on remote server (for remote execution)
+4. Check path includes python executable if needed
+</Accordion>
+
+<Accordion title="QARK scan fails or parameters not working">
+**Problem:** QARK analysis errors or outdated parameters.
+
+**Solutions:**
+
+**Script file copy issue (Fixed in v1.1.794):**
+1. Update to SVM v1.1.794 or later
+2. Verify remote server connectivity
+
+**Parameter issue (Fixed in v1.1.794):**
+Removed deprecated parameters: `--install 0 --exploit 0`
+
+1. Update to SVM v1.1.794 or later
+2. Use current QARK command-line options
+3. Check QARK documentation for supported parameters
+</Accordion>
+
+<Accordion title="EyeWitness installation missing from menu">
+**Problem:** Cannot find EyeWitness installation option.
+
+**Solution (Fixed in v1.1.792+):**
+1. Update to SVM v1.1.792 or later
+2. Find option: Tools → Install → Remote → EyeWitness
+3. Java installation also added to same menu
+4. Requires SSH access to remote server
+</Accordion>
+
+<Accordion title="Burpsuite executable selection not working">
+**Problem:** Cannot configure Burpsuite executable path.
+
+**Solution (Fixed in v1.1.791):**
+1. Update to SVM v1.1.791 or later
+2. Go to Settings → Configuration → Tools
+3. Browse and select Burpsuite .jar or .exe file
+4. Verify Java is installed if using .jar file
+</Accordion>
+
+<Accordion title="Android tools outdated versions">
+**Problem:** Using old versions of Android tools.
+
+**Solution:**
+Use Tools → Install/Update Tools to get latest versions:
+
+**Updated in v2.1.0:**
+- Apktool → v2.4.0
+- Uber Apk Signer → v1.0.0
+- JD-Gui → v1.5.2
+
+**Updated in v2.0.0:**
+- Android Debug Bridge (adb) → v1.0.39
+
+**Installation:**
+1. Go to Tools → Install/Update Tools (Local or Remote)
+2. Select tool to update
+3. Tool is downloaded and installed automatically
+4. Verify tool version after installation
+</Accordion>
+
+## Getting Additional Help
+
+<Accordion title="Where to find detailed error logs">
+For debugging complex issues:
+
+1. **Windows Event Viewer** (Windows only)
+2. **Wine Debug Output** (Linux/MacOS):
+   ```bash
+   WINEDEBUG=+all wine svm.exe 2>&1 | tee svm_debug.log
+   ```
+3. **Tool-specific logs**:
+   - Nessus: `/opt/nessus/var/nessus/logs/`
+   - OpenVAS: `/var/log/openvas/`
+   - Qualys: Check web interface audit logs
+
+4. **Temporary files** (may contain error details):
+   - Windows: `%TEMP%\`
+   - Linux/MacOS: `/tmp/`
+   - Look for files with scan timestamps
+</Accordion>
+
+<Accordion title="Reporting issues to SVM development team">
+When reporting bugs:
+
+1. **Include Version Information:**
+   - SVM version (check Help → About)
+   - Operating system and version
+   - Wine version (if applicable)
+   - Tool versions involved
+
+2. **Provide Error Details:**
+   - Exact error message
+   - Steps to reproduce
+   - Screenshots if relevant
+   - Log files if available
+
+3. **Submit Via:**
+   - Built-in BugIdeas feature (Menu → BugIdeas)
+   - [GitHub Issues](https://github.com/simplevulnerabilitymanager/svm/issues)
+   - Email: contacto@simplevulnerabilitymanager.com
+
+4. **Check First:**
+   - Review [changelog](https://github.com/simplevulnerabilitymanager/svm/blob/master/changelog.txt) for known issues
+   - Search existing GitHub issues
+   - Check [Wiki FAQ](https://github.com/simplevulnerabilitymanager/svm/wiki)
+</Accordion>
+
+## Need More Help?
+
+If your issue isn't covered here:
+
+- Check the [FAQ page](/help/faq) for general questions
+- Visit the [GitHub Wiki](https://github.com/simplevulnerabilitymanager/svm/wiki) for comprehensive guides
+- Contact support: contacto@simplevulnerabilitymanager.com
+- Follow [@SimpleVulnManag](https://twitter.com/SimpleVulnManag) for updates and tips

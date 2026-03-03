@@ -1,0 +1,215 @@
+---
+title: Nessus Scripts
+description: Automated Nessus vulnerability scanning and policy retrieval scripts
+---
+
+## Overview
+
+The Nessus scripts automate vulnerability scanning using Tenable Nessus via REST API. These scripts authenticate, launch scans, monitor progress, and export reports in HTML and XML formats.
+
+## nessus_scan.bat
+
+Launches a Nessus vulnerability scan and generates reports.
+
+### Parameters
+
+<ParamField path="Proyecto" type="string" required>
+  Project name for the scan
+</ParamField>
+
+<ParamField path="IP" type="string" required>
+  Target IP address or range to scan
+</ParamField>
+
+<ParamField path="Username" type="string" required>
+  Nessus authentication username
+</ParamField>
+
+<ParamField path="Password" type="string" required>
+  Nessus authentication password
+</ParamField>
+
+<ParamField path="Server" type="string" required>
+  Nessus server hostname or IP
+</ParamField>
+
+<ParamField path="Port" type="string" required>
+  Nessus server port (typically 8834)
+</ParamField>
+
+<ParamField path="Policy_Name" type="string" required>
+  Name of the Nessus scan policy to use
+</ParamField>
+
+<ParamField path="Timestamp" type="string" required>
+  Timestamp for unique file naming
+</ParamField>
+
+<ParamField path="Documentacion" type="string" required>
+  Output directory for reports
+</ParamField>
+
+### Usage
+
+```batch
+nessus_scan.bat "MyProject" "192.168.1.100" "admin" "password" "nessus.local" "8834" "Basic Network Scan" "20240315_143000" "C:\Reports"
+```
+
+### Workflow
+
+1. **Service Detection** - Verifies Nessus service is running
+2. **Authentication** - Logs in via `/session` endpoint
+3. **Policy Resolution** - Retrieves policy ID and template UUID
+4. **Scan Creation** - Creates new scan with target configuration
+5. **Scan Launch** - Starts the scan execution
+6. **Progress Monitoring** - Polls scan status every 60 seconds
+7. **Report Generation** - Exports HTML and XML reports
+8. **Cleanup** - Logs out and removes temporary files
+
+### API Endpoints Used
+
+| Endpoint | Method | Purpose |
+|----------|--------|--------|
+| `/session` | POST | Authenticate and get token |
+| `/policies` | GET | List available scan policies |
+| `/scans` | POST | Create new scan |
+| `/scans/{id}/launch` | POST | Launch scan |
+| `/scans/{id}` | GET | Get scan status and details |
+| `/scans/{id}/export` | POST | Request report export |
+| `/scans/{id}/export/{file}/status` | GET | Check export status |
+| `/scans/{id}/export/{file}/download` | GET | Download report |
+| `/session` | DELETE | Logout |
+
+### Authentication Pattern
+
+```batch
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"password"}' \
+  https://nessus.local:8834/session
+```
+
+The token is extracted and used in subsequent requests:
+
+```batch
+curl -H "X-Cookie: token=TOKEN_VALUE" \
+  https://nessus.local:8834/scans
+```
+
+### Scan Configuration
+
+The script creates scans with the following settings:
+
+```json
+{
+  "uuid": "TEMPLATE_UUID",
+  "settings": {
+    "name": "ProjectName",
+    "description": "SVM Nessus Scan",
+    "text_targets": "192.168.1.100",
+    "scanner_id": "1",
+    "launch": "ON_DEMAND",
+    "policy_id": POLICY_ID
+  }
+}
+```
+
+### Report Export
+
+Two report formats are generated:
+
+**HTML Report:**
+```json
+{
+  "format": "html",
+  "chapters": "vuln_hosts_summary;vuln_by_plugin"
+}
+```
+
+**XML Report (Nessus format):**
+```json
+{
+  "format": "nessus",
+  "chapters": "vuln_hosts_summary;vuln_by_plugin"
+}
+```
+
+### Error Handling
+
+- **Service not running** - Prompts to start Nessus daemon: `/etc/init.d/nessusd start`
+- **Authentication failure** - Exits if token is null
+- **Scan paused** - Waits and continues monitoring
+- **Scan canceled** - Exits gracefully
+- **Export failure** - Exits if status report is null
+
+### Output Files
+
+- `NessusReport - {Timestamp}.html` - HTML formatted report
+- `NessusReport - {Timestamp}.xml` - XML/Nessus formatted report
+
+The HTML report automatically opens after completion.
+
+---
+
+## nessus_get_policies.bat
+
+Retrieves available Nessus scan policies for use in scans.
+
+### Parameters
+
+<ParamField path="Server" type="string" required>
+  Nessus server hostname or IP
+</ParamField>
+
+<ParamField path="Port" type="string" required>
+  Nessus server port
+</ParamField>
+
+<ParamField path="Username" type="string" required>
+  Nessus authentication username
+</ParamField>
+
+<ParamField path="Password" type="string" required>
+  Nessus authentication password
+</ParamField>
+
+<ParamField path="Timestamp" type="string" required>
+  Timestamp for temporary file naming
+</ParamField>
+
+### Usage
+
+```batch
+nessus_get_policies.bat "nessus.local" "8834" "admin" "password" "20240315_143000"
+```
+
+### Implementation
+
+The script retrieves policy names using the Nessus API:
+
+```batch
+curl -H "X-Cookie: token=TOKEN" \
+  https://nessus.local:8834/policies | jq ".policies[].name"
+```
+
+### Output
+
+Policy names are written to: `%TEMP%\nessus_scan_policies_{Timestamp}.txt`
+
+Example output:
+```
+"Basic Network Scan"
+"Advanced Scan"
+"Web Application Tests"
+"Custom Policy"
+```
+
+### Error Handling
+
+- Validates service availability before authentication
+- Checks credentials and exits with error message if invalid
+- Cleans up temporary token files
+
+### Notes
+
+- Use retrieved policy names as the `Policy_Name` parameter in `nessus_scan.bat`
+- The commented line shows how to retrieve scan templates instead of policies

@@ -1,0 +1,314 @@
+---
+title: Frequently Asked Questions
+description: Common questions and answers about Simple Vulnerability Manager
+---
+
+## General Questions
+
+<Accordion title="What is Simple Vulnerability Manager (SVM)?">
+Simple Vulnerability Manager is a comprehensive tool for vulnerability analysts that enables complete system weakness analysis and report generation. It includes a database of recognized vulnerabilities organized into Web Scanners, Service Scanners, Static Scanners, and Mobile categories.
+
+Each vulnerability includes:
+- Brief description of the issue
+- System impact assessment
+- Step-by-step resolution instructions
+</Accordion>
+
+<Accordion title="What are the main features of SVM?">
+- **Project Management**: Create and manage client projects with personalized comments and screenshots
+- **Vulnerability Database**: Comprehensive database of Web, Service, Static, and Mobile vulnerabilities
+- **Report Generation**: Generate technical and executive reports in Word format
+- **Tool Integration**: One-click execution of external scanning tools
+- **Evidence Management**: Add screenshots and detailed evidence for each vulnerability
+- **Multi-language Support**: Available in Spanish, English, and Russian (v2.1.0+)
+</Accordion>
+
+<Accordion title="What scanning tools does SVM integrate with?">
+**Web Scanners:**
+- Acunetix (v10.5 and v11/v12)
+- Burpsuite
+- Netsparker
+- Arachni Web Application
+
+**Service Scanners:**
+- Qualys Community and Enterprise
+- Nessus
+- OpenVAS
+- Nmap
+
+**Android Tools:**
+- ApkTools
+- Enjarify
+- JD-Gui
+- MobSF
+- QARK
+- AndroBugs Framework
+- Uber Apk Signer
+
+**Information Tools:**
+- Recon-ng
+- EyeWitness
+</Accordion>
+
+<Accordion title="What is the difference between SVM Free and SVM Pro?">
+**SVM Free:**
+- Freeware license for personal use
+- Local database storage
+- All core scanning and reporting features
+- Open source scripts (.bat and .sh files)
+
+**SVM Pro:**
+- Professional license required for company use
+- Client-server architecture with remote database
+- Multi-user support with synchronized data
+- Encrypted and compressed data transmission (v2.0.2+)
+- Contact: contacto@simplevulnerabilitymanager.com
+
+Demo available: Server: `svm.myddns.me` | Port: `8444` | Token: `svm_demo`
+</Accordion>
+
+<Accordion title="How do I install SVM?">
+Installation is straightforward:
+
+1. Download the installer from [GitHub Releases](https://github.com/simplevulnerabilitymanager/svm/releases)
+2. Run the installer and follow the instructions
+3. No additional configuration required
+4. Start using SVM immediately
+
+The application includes all necessary dependencies except for external scanning tools and Microsoft Office (required for report generation).
+</Accordion>
+
+## Platform Compatibility
+
+<Accordion title="Can I run SVM on Linux or MacOS?">
+Yes! SVM runs on Linux and MacOS using Wine.
+
+**MacOS Installation (v1.1.792+):**
+- Wine Stable 2.0.3 or later
+- XQuartz 2.7.11 (required by Wine 2.0.3)
+
+**Linux Compatibility:**
+- Debian 9 and later (improved detection in v2.0.3)
+- Ubuntu (including Ubuntu for Windows 10)
+- Other distributions supporting Wine
+
+Several Wine-specific bugs were fixed in version 2.1.0 and later for improved cross-platform stability.
+</Accordion>
+
+<Accordion title="Does SVM support Unicode characters?">
+Yes, full Unicode support was added in version 2.1.0. This enables:
+- International characters in project names
+- Unicode in vulnerability descriptions
+- Proper handling of non-ASCII characters in reports
+- Support for multiple languages (Spanish, English, Russian)
+</Accordion>
+
+## Reports and Documentation
+
+<Accordion title="What report formats does SVM support?">
+SVM generates reports in Microsoft Word format using customizable templates:
+
+**Report Types:**
+- Technical Report (Informe Técnico)
+- Executive Report (Informe Ejecutivo)
+- Generic Report (Informe Genérico)
+
+**Report Features:**
+- Customizable risk colors and table styles
+- Statistical charts with custom colors
+- Variable substitution (e.g., [Proyecto], [Subtitulo])
+- Evidence and screenshots included
+- Risk-based vulnerability tables
+
+<Note>Microsoft Word is required for report generation.</Note>
+</Accordion>
+
+<Accordion title="Can I customize report templates?">
+Yes, reports are fully customizable (v2.0.0+):
+
+1. **Template Editing**: Double-click the template in configuration to edit it directly in Word
+2. **Custom Styles**: Assign different table styles from your template to each risk level
+3. **Color Customization**: Set custom colors for risk levels and statistical charts
+4. **Variables**: Use variables like `[Proyecto]` and `[Subtitulo]` in templates
+5. **Title Styles**: Select title styles extracted from your template
+
+The template uses the style name `Titulo_SVM` for better compatibility with English and Spanish Word versions (v2.0.3+).
+</Accordion>
+
+<Accordion title="How do I export project data to Excel?">
+SVM can export vulnerability data to Excel:
+
+1. Use the Search feature (Buscador) to filter vulnerabilities
+2. Click the Export to Excel option
+3. Excel file includes all filtered results including Critical vulnerabilities (fixed in v2.1.0)
+
+<Note>Microsoft Excel is required for export functionality.</Note>
+</Accordion>
+
+## Remote Scanning
+
+<Accordion title="How do I configure remote scanning?">
+SVM supports remote scanning via SSH for most Linux-based tools:
+
+**Configuration Requirements:**
+- Linux server with scanning tools installed
+- SSH access credentials
+- PuTTY tools (plink.exe, pscp.exe) included with SVM
+
+**Supported Remote Scans:**
+- OpenVAS (Remote SSH)
+- Nessus
+- Arachni
+- Recon-ng
+- EyeWitness
+- Enjarify
+- QARK
+- ApkTools
+
+Scripts are automatically copied to the remote server and executed via SSH.
+</Accordion>
+
+<Accordion title="Can I scan private IP addresses with Qualys External?">
+No. Qualys External scanners cannot scan private IP addresses (RFC 1918 ranges):
+- 10.0.0.0/8
+- 172.16.0.0/12
+- 192.168.0.0/16
+
+For internal network scanning, you must:
+- Use Qualys Internal Appliances instead
+- Configure an internal scanner in your Qualys account
+
+An informative message was added in v1.1.788 to alert users about this limitation.
+</Accordion>
+
+## Updates and Maintenance
+
+<Accordion title="How do I update SVM?">
+**Application Updates:**
+- SVM automatically checks for new versions (v2.0.0+)
+- Update notifications direct you to the download page
+- Manual download from [GitHub Releases](https://github.com/simplevulnerabilitymanager/svm/releases)
+
+**Script Updates (v2.1.0+):**
+- Go to Tools → Update All Scripts
+- Updates all internal scripts and tools
+- Scripts are open source on GitHub
+
+**External Tool Updates:**
+- Use Tools → Install/Update Tools (Local/Remote)
+- Downloads latest versions of integrated tools
+</Accordion>
+
+<Accordion title="How do I update scanning tool plugins?">
+**OpenVAS:**
+- Menu: Tools → OpenVAS Plugins
+- Updates vulnerability definitions
+
+**Nessus:**
+- Menu: Tools → Nessus Update Plugins (v1.1.787+)
+- Updates vulnerability definitions
+
+Plugin updates ensure you have the latest vulnerability signatures for accurate scanning.
+</Accordion>
+
+## Database and Backup
+
+<Accordion title="How do I backup my SVM database?">
+For local database installations:
+
+1. Go to Database → Backup
+2. Select backup location
+3. SVM creates a backup file
+
+<Note>A Wine-specific backup error was fixed in v2.0.3, ensuring proper backup functionality on Linux/MacOS.</Note>
+</Accordion>
+
+<Accordion title="Can I run multiple instances of SVM?">
+Yes, but with considerations:
+
+**Multiple Instances (v2.1.0+):**
+- Executable name (`svm.exe`) is associated with configuration file (`svm.ini`)
+- This allows running Standalone and Professional versions simultaneously
+- Each instance must have its own configuration file
+
+**Wine Compatibility:**
+- Fixed error when exiting second instance (v2.0.3)
+- Properly handles multiple instances on Linux/MacOS
+
+<Warning>Ensure each instance uses a different database to avoid conflicts.</Warning>
+</Accordion>
+
+## Troubleshooting Resources
+
+<Accordion title="Where can I find more help?">
+**Official Resources:**
+- [GitHub Wiki](https://github.com/simplevulnerabilitymanager/svm/wiki) - Comprehensive FAQ and guides
+- [GitHub Issues](https://github.com/simplevulnerabilitymanager/svm/issues) - Report bugs and request features
+- [Troubleshooting Guide](/help/troubleshooting) - Common issues and solutions
+
+**Community:**
+- Twitter: [@SimpleVulnManag](https://twitter.com/SimpleVulnManag)
+- Facebook: [@SimpleVulnerabilityManager](https://www.facebook.com/simplevulnerabilitymanager)
+- YouTube: [SVM Channel](https://www.youtube.com/channel/UCDXH-m2SqQsnb91UUsQxlrQ)
+
+**Support:**
+- Email: contacto@simplevulnerabilitymanager.com
+- Website: [SimpleVulnerabilityManager.com](https://simplevulnerabilitymanager.com/)
+</Accordion>
+
+<Accordion title="How do I report bugs or suggest features?">
+SVM includes a built-in bug/idea reporter (v2.0.0+):
+
+1. Go to Menu → BugIdeas
+2. Select whether reporting a bug or suggesting a feature
+3. Provide detailed description
+4. Submit to development team
+
+You can also:
+- Report on [GitHub Issues](https://github.com/simplevulnerabilitymanager/svm/issues)
+- Email: contacto@simplevulnerabilitymanager.com
+</Accordion>
+
+## Advanced Features
+
+<Accordion title="Can I use SVM behind a proxy?">
+Yes, SVM supports proxy configuration for tool downloads and updates:
+
+**Proxy Settings:**
+- Configure in Settings → Configuration
+- Supports authentication (username/password)
+- Used for downloading tools and updates
+- Applies to: Qualys, tool installations, script updates
+
+Example: `--proxy 192.168.1.1:8080 --proxy-user username:password`
+</Accordion>
+
+<Accordion title="Does SVM support certificate-based authentication?">
+Yes, for certain tools:
+
+**SSL/TLS Certificates:**
+- Invalid certificates accepted for OpenVAS and Nessus (v1.1.789)
+- Certificate installation script included: `cert_install.bat`
+- Enables access to tools with self-signed certificates
+
+This is particularly useful for internal security tools that use self-signed certificates.
+</Accordion>
+
+<Accordion title="Can I customize scan configurations?">
+Yes, for most scanning tools:
+
+**OpenVAS:**
+- Edit scan configs via: Tools → OpenVAS → Edit Script
+- Local and remote configurations supported
+- Custom scan profiles available
+
+**Nessus:**
+- Select from available policies
+- Configure via Nessus web interface
+- SVM retrieves available policies automatically
+
+**Acunetix v11/v12:**
+- Six built-in profiles available
+- Full Scan, High Risk, XSS, SQLi, Weak Passwords, Crawl Only
+- Custom headers, cookies, and authentication supported
+</Accordion>

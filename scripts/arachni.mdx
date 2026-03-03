@@ -1,0 +1,362 @@
+---
+title: Arachni Remote Scanner Script
+description: Documentation for arachni_scan_remote.bat remote vulnerability scanning with SSH
+---
+
+Remote Arachni vulnerability scanner that executes scans on a remote Linux server via SSH and retrieves results.
+
+## Overview
+
+The `arachni_scan_remote.bat` script connects to a remote Linux server running Arachni, executes a comprehensive vulnerability scan, generates HTML reports, and downloads the results. It uses PuTTY tools (plink and pscp) for SSH communication.
+
+## Parameters
+
+| Parameter | Position | Description |
+|-----------|----------|-------------|
+| `Proyecto` | 1 | Project name for identification |
+| `URL` | 2 | Target URL to scan |
+| `Documentacion` | 3 | Local output directory for reports |
+| `Timestamp` | 4 | Timestamp for file naming |
+| `NRO` | 5 | Scan number identifier |
+| `Server` | 6 | Remote server hostname or IP address |
+| `Username` | 7 | SSH username for remote server |
+| `Password` | 8 | SSH password for authentication |
+
+## Usage
+
+```batch
+arachni_scan_remote.bat "MyWebApp" "http://example.com" ^
+  "C:\Reports" "20260303_120000" "1" ^
+  "scanner.company.com" "scanuser" "SecureP@ss123"
+```
+
+## Prerequisites
+
+<Note>
+**Required tools in script directory:**
+- **plink.exe** - PuTTY command-line SSH client
+- **pscp.exe** - PuTTY secure copy (SCP) client
+- **Login_fast.rb** - Login script template (copied to remote server)
+
+**Remote server requirements:**
+- Arachni installed and in PATH
+- SSH server running on port 22
+- Write access to /tmp directory
+- Ruby installed (for login scripts)
+</Note>
+
+## Script Workflow
+
+### 1. Upload Login Script
+
+Copies the local login script to the remote server:
+
+```batch
+pscp.exe -P 22 -l USERNAME -pw PASSWORD -C "%Documentacion%Login_fast.rb" SERVER:"/tmp/Login"
+plink.exe -ssh -P 22 -l USERNAME -pw PASSWORD -C SERVER "chmod 755 /tmp/Login"
+```
+
+Source: `%~dp0Login_fast.rb` → Destination: `/tmp/Login` on remote server
+
+### 2. Execute Arachni Scan
+
+Runs a comprehensive Arachni scan on the remote server:
+
+```bash
+arachni --output-verbose --output-only-positives \
+  --http-user-agent='USER_AGENT' \
+  --audit-links --audit-forms --audit-cookies --audit-headers \
+  --audit-jsons --audit-xmls --audit-ui-inputs --audit-ui-forms \
+  --checks=* \
+  --plugin=login_script:script=/tmp/Login \
+  --scope-exclude-pattern=PATTERN \
+  --platforms=PLATFORM \
+  --report-save-path='/tmp/ArachniReport - TIMESTAMP.afr' \
+  URL
+```
+
+### 3. Generate HTML Report
+
+Converts the Arachni Framework Report (.afr) to HTML:
+
+```bash
+arachni_reporter '/tmp/ArachniReport - TIMESTAMP.afr' \
+  --reporter=html:outfile='/tmp/ArachniReport - TIMESTAMP.zip'
+```
+
+### 4. Download and Cleanup
+
+Retrieves the report and removes remote files:
+
+```batch
+pscp.exe -P 22 -l USERNAME -pw PASSWORD -C SERVER:"/tmp/ArachniReport - TIMESTAMP.zip" "%Documentacion%\ArachniReport - TIMESTAMP.zip"
+plink.exe -ssh -P 22 -l USERNAME -pw PASSWORD -C SERVER "rm -fr '/tmp/Login' '/tmp/ArachniReport - TIMESTAMP.zip' '/tmp/ArachniReport - TIMESTAMP.afr'"
+```
+
+## Scan Configuration
+
+### Default Platform Settings
+
+The script is configured for Windows/IIS/ASP.NET applications:
+
+```batch
+set plataform=windows,sql,iis,aspx
+```
+
+For Linux/Apache/PHP applications, uncomment arachni_scan_remote.bat:23:
+
+```batch
+set plataform=linux,mysql,apache,php
+```
+
+View all available platforms:
+```bash
+arachni --platforms-list
+```
+
+### Scope Exclusion
+
+The script excludes logout pages to prevent session termination:
+
+```batch
+set scope-exclude-pattern=Logout
+```
+
+Modify at arachni_scan_remote.bat:21 to exclude other patterns:
+
+```batch
+set scope-exclude-pattern=Logout|admin|manager|phpmyadmin
+```
+
+### User Agent
+
+Default user agent:
+
+```
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36
+```
+
+## Audit Modules
+
+The script enables all audit modules:
+
+| Module | Description |
+|--------|-------------|
+| `--audit-links` | Audit links and query parameters |
+| `--audit-forms` | Audit HTML forms |
+| `--audit-cookies` | Audit cookies for vulnerabilities |
+| `--audit-headers` | Audit HTTP headers |
+| `--audit-jsons` | Audit JSON inputs |
+| `--audit-xmls` | Audit XML inputs |
+| `--audit-ui-inputs` | Audit UI input elements |
+| `--audit-ui-forms` | Audit UI form elements |
+| `--checks=*` | Run all vulnerability checks |
+
+## Login Script Configuration
+
+The script uses the `login_script` plugin with `/tmp/Login` for authenticated scanning.
+
+### Fast Login (No Browser)
+
+Example login script structure in `Login_fast.rb`:
+
+```ruby
+response = http.post( 'http://example.com/login.php',
+    parameters:     {
+        'username' => 'test',
+        'password' => 'test'
+    },
+    mode:           :sync,
+    update_cookies: true
+)
+framework.options.session.check_url     = to_absolute( response.headers.location, response.url )
+framework.options.session.check_pattern = /Logout|Sign out|Cerrar Sesion/
+```
+
+### Browser-Based Login (Commented)
+
+For complex login forms requiring JavaScript, see comments at arachni_scan_remote.bat:32-44:
+
+```ruby
+browser.goto 'http://testphp.acunetix.com/login.php'
+form = browser.form( id: 'loginform' )
+form.text_field( name: 'uname' ).set 'test'
+form.text_field( name: 'pass' ).set 'test'
+form.submit
+framework.options.session.check_url     = browser.url
+framework.options.session.check_pattern = /Logout/
+```
+
+**Note**: Browser-based login requires additional gems:
+```bash
+gem install watir-webdriver
+gem install selenium-webdriver
+```
+
+### Alternative: AutoLogin Plugin
+
+For simple form-based authentication, use the `autologin` plugin (see comments at arachni_scan_remote.bat:63-65):
+
+```batch
+set LoginPage=%URL%/login.php
+--plugin=autologin:url=%LoginPage%,parameters='username=test&password=test',check='Logout'
+```
+
+## HTTP Authentication
+
+For HTTP Basic/Digest authentication, uncomment and configure arachni_scan_remote.bat:16-19:
+
+```batch
+set http-username=Admin
+set http-password=Password
+--http-authentication-username=%http-username% --http-authentication-password=%http-password%
+```
+
+## Output Files
+
+### Local Report
+
+Downloaded to:
+```
+%Documentacion%\ArachniReport - {Timestamp}.zip
+```
+
+Extract the ZIP to access the HTML report.
+
+### Remote Files (Auto-Deleted)
+
+- `/tmp/Login` - Login script
+- `/tmp/ArachniReport - {Timestamp}.afr` - Arachni Framework Report
+- `/tmp/ArachniReport - {Timestamp}.zip` - HTML report archive
+
+All remote files are deleted after download.
+
+## Example Usage Scenarios
+
+### Windows/IIS Application
+
+```batch
+arachni_scan_remote.bat "CorporatePortal" "https://portal.company.com" ^
+  "D:\Scans" "20260303_140000" "1" ^
+  "arachni-server.local" "scanuser" "P@ssw0rd"
+```
+
+### Linux/Apache/PHP Application
+
+Modify platform at arachni_scan_remote.bat:23, then:
+
+```batch
+arachni_scan_remote.bat "PHPApp" "http://webapp.example.com" ^
+  "C:\Reports" "20260303_150000" "1" ^
+  "192.168.1.100" "root" "SecurePass"
+```
+
+### Multiple Scans with Different Logins
+
+Create custom login scripts for different applications:
+
+```batch
+rem Copy app-specific login script before each scan
+copy Login_App1.rb %Documentacion%\Login_fast.rb
+arachni_scan_remote.bat "App1" "http://app1.com" ...
+
+copy Login_App2.rb %Documentacion%\Login_fast.rb  
+arachni_scan_remote.bat "App2" "http://app2.com" ...
+```
+
+## Security Considerations
+
+<Warning>
+- **Passwords in plain text**: The script passes SSH passwords on the command line
+- **Use key-based authentication** in production environments instead of passwords
+- **Secure the remote server**: Ensure only authorized users have SSH access
+- **Network security**: Use VPN or private network for scanner traffic
+</Warning>
+
+### Using SSH Keys Instead
+
+Modify the script to use Pageant (PuTTY's SSH agent) or convert to use SSH keys:
+
+```batch
+rem Remove -pw PASSWORD and use Pageant-loaded keys
+plink.exe -ssh -P 22 -l USERNAME SERVER "command"
+```
+
+## Troubleshooting
+
+### SSH Connection Failed
+
+**Symptoms**: Script hangs or shows connection errors
+
+**Solutions**:
+- Verify server hostname/IP is reachable: `ping SERVER`
+- Check SSH is running on port 22
+- Verify credentials are correct
+- Test manual connection: `plink.exe -ssh -P 22 -l USERNAME -pw PASSWORD SERVER`
+
+### Arachni Command Not Found
+
+**Symptoms**: Remote command fails with "arachni: command not found"
+
+**Solutions**:
+- Install Arachni on remote server
+- Ensure Arachni is in PATH: `which arachni`
+- Use full path: `/opt/arachni/bin/arachni`
+
+### Login Script Errors
+
+**Symptoms**: Scan completes but misses authenticated pages
+
+**Solutions**:
+- Test login script manually on remote server
+- Verify session check pattern matches logged-in state
+- Check credentials in Login_fast.rb are correct
+- Review Arachni scan log for authentication errors
+
+### Report Download Fails
+
+**Symptoms**: pscp.exe fails to download report
+
+**Solutions**:
+- Verify local `Documentacion` path exists and is writable
+- Check remote /tmp has sufficient space
+- Ensure firewall allows SCP traffic
+- Test manual download: `pscp.exe -P 22 -l USER -pw PASS SERVER:/tmp/test.txt C:\`
+
+### Insufficient Disk Space
+
+**Symptoms**: Scan fails or report generation fails
+
+**Solutions**:
+- Check remote /tmp disk space: `plink.exe ... SERVER "df -h /tmp"`
+- Clean up old scan files in /tmp
+- Configure Arachni to use different output directory with more space
+
+## Performance Tuning
+
+### Concurrent Scans
+
+The script does not limit concurrent scans. For multiple targets, stagger execution manually:
+
+```batch
+start arachni_scan_remote.bat ... "1" ...
+timeout /t 60
+start arachni_scan_remote.bat ... "2" ...
+```
+
+### Scan Speed
+
+To adjust scan aggressiveness, add to the Arachni command:
+
+```bash
+--http-request-concurrency=20    # Default: 20 concurrent HTTP requests
+--http-request-timeout=10000     # Timeout in milliseconds
+--scope-page-limit=1000          # Maximum pages to crawl
+```
+
+### Resource Limits
+
+Monitor remote server resources during scans:
+```bash
+plink.exe ... SERVER "top -b -n 1 | grep arachni"
+```

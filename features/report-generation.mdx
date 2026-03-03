@@ -1,0 +1,439 @@
+---
+title: Report Generation
+description: Generate professional Word reports with customizable templates
+---
+
+# Report Generation
+
+Simple Vulnerability Manager enables you to generate professional, comprehensive security assessment reports in Microsoft Word format. The report generation system uses customizable templates and supports multiple report types with advanced formatting options.
+
+## Overview
+
+SVM's reporting engine transforms your project data into polished Word documents:
+
+- **Template-Based**: Uses customizable Word templates (`.dotx` format)
+- **Multiple Report Types**: Technical, Executive, and Generic reports
+- **Automated Formatting**: Applies styles, tables, and formatting automatically
+- **Variable Substitution**: Dynamic content based on project data
+- **Statistical Graphics**: Optional charts and graphs showing vulnerability distribution
+- **Risk-Based Styling**: Different table styles for each risk level
+
+<Note>
+Report generation requires Microsoft Word to be installed on your system. Since version 2.0.2, SVM provides better error handling when Office is not available.
+</Note>
+
+## Report Template
+
+### Template_SVM.dotx
+
+The default Word template (`Template_SVM.dotx`) serves as the foundation for all generated reports. This template includes:
+
+- Pre-defined heading styles
+- Table formatting styles
+- Document structure and layout
+- Header and footer configurations
+- Custom variables for dynamic content
+
+<Warning>
+Starting from version 2.0.3, SVM uses a new template title style called "Titulo_SVM" for better compatibility with both English and Spanish versions of Microsoft Word.
+</Warning>
+
+### Customizing the Template
+
+<Steps>
+  <Step title="Open Template for Editing">
+    Navigate to Configuration > Reports and double-click the template file.
+    
+    <Note>
+    Since version 2.0.0, double-clicking the template opens the actual template file for editing, not a new document based on the template.
+    </Note>
+  </Step>
+  
+  <Step title="Modify Styles and Formatting">
+    Customize the template to match your organization's branding:
+    
+    - **Heading Styles**: Configure Title, Heading 1, Heading 2, etc.
+    - **Table Styles**: Create custom table formats for vulnerability listings
+    - **Colors and Fonts**: Match your corporate identity
+    - **Logo and Headers**: Add company branding elements
+    - **Page Layout**: Margins, orientation, and page size
+  </Step>
+  
+  <Step title="Configure Style Extraction">
+    SVM automatically extracts styles from your template:
+    
+    - Opens and reads the template file
+    - Extracts all heading style formats (Titulo_SVM, Heading 1, Heading 2, etc.)
+    - Extracts all table style formats
+    - Displays available styles in configuration interface
+    
+    <Note>
+    Style extraction was introduced in version 2.0.0, allowing you to see exactly which styles are available in your template.
+    </Note>
+  </Step>
+  
+  <Step title="Save Template">
+    Save your customized template as a `.dotx` file and configure SVM to use it in the Reports settings.
+  </Step>
+</Steps>
+
+### Template Variables
+
+The template supports dynamic variables that are replaced with actual project data during report generation:
+
+<Accordion title="Available Variables">
+  Common template variables include:
+  
+  - `[Proyecto]` - Project name (can be used in vulnerability details since version 1.1.789)
+  - `[Cliente]` - Client name
+  - `[Fecha]` - Assessment date
+  - `[Subtitulo]` - Subtitle (replacement fixed in version 2.0.2)
+  - `[Web]` - Web addresses from project
+  - `[IP]` - IP addresses from project
+  - `[Analista]` - Analyst name
+  - `[Empresa]` - Company name
+  
+  Variables are case-sensitive and must be enclosed in square brackets.
+</Accordion>
+
+<Accordion title="Using Variables in Templates">
+  Place variables anywhere in your template:
+  
+  ```
+  Security Assessment Report
+  
+  Project: [Proyecto]
+  Client: [Cliente]
+  Date: [Fecha]
+  
+  This security assessment was performed on the following assets:
+  Web Applications: [Web]
+  IP Addresses: [IP]
+  ```
+  
+  During report generation, these variables will be replaced with actual data from your project.
+</Accordion>
+
+## Report Types
+
+SVM supports three types of security assessment reports:
+
+<Tabs>
+  <Tab title="Technical Report">
+    **Informe Técnico (Technical Report)**
+    
+    Comprehensive technical documentation for IT and security teams:
+    
+    - Detailed vulnerability descriptions
+    - Technical exploitation details
+    - Full request/response data
+    - Step-by-step remediation instructions
+    - Evidence screenshots with technical annotations
+    - CVSS scores and technical metrics
+    - Proof-of-concept demonstrations
+    
+    Best for: Security engineers, system administrators, developers
+  </Tab>
+  
+  <Tab title="Executive Report">
+    **Informe Ejecutivo (Executive Report)**
+    
+    High-level summary for management and executives:
+    
+    - Executive summary of findings
+    - Risk assessment and business impact
+    - Statistical charts and graphs
+    - Prioritized recommendations
+    - Compliance implications
+    - Reduced technical jargon
+    - Focus on business risk
+    
+    Best for: C-level executives, management, board members
+  </Tab>
+  
+  <Tab title="Generic Report">
+    **Informe Genérico (Generic Report)**
+    
+    Balanced report suitable for mixed audiences:
+    
+    - Moderate technical detail
+    - Clear vulnerability descriptions
+    - Business and technical impact
+    - Practical remediation guidance
+    - Supporting evidence
+    - Accessible to both technical and non-technical readers
+    
+    Best for: Mixed audiences, general documentation
+  </Tab>
+</Tabs>
+
+<Note>
+Since version 1.1.791, the report filename includes the report type ("Informe Técnico", "Informe Ejecutivo", or "Informe Genérico") for easier identification.
+</Note>
+
+## Configuring Report Settings
+
+### Risk-Based Table Formatting
+
+One of SVM's most powerful features is the ability to apply different table styles based on vulnerability risk level:
+
+<Steps>
+  <Step title="Access Report Configuration">
+    Navigate to Configuration > Reports (Opciones/Configuración)
+  </Step>
+  
+  <Step title="Select Template">
+    Choose your Word template (`.dotx` file). SVM will automatically extract available styles.
+  </Step>
+  
+  <Step title="Assign Risk Colors">
+    Configure custom colors for each risk level:
+    
+    - Critical (default: Dark Red)
+    - High (default: Red)
+    - Medium (default: Orange)
+    - Low (default: Yellow)
+    - Informational (default: Blue)
+    
+    <Note>
+    Since version 2.0.0, you can select custom RGB colors for each risk level using a standard Windows color picker. Color indicators display your selected colors in the configuration interface.
+    </Note>
+  </Step>
+  
+  <Step title="Assign Table Styles">
+    Map Word table styles to risk levels:
+    
+    - Each risk level can have a different table style
+    - Styles are extracted from your Word template
+    - Allows visual differentiation in reports
+    - Creates professional, color-coded vulnerability tables
+    
+    <Note>
+    Table style assignment per risk level was introduced in version 2.0.0, enabling sophisticated report formatting.
+    </Note>
+  </Step>
+  
+  <Step title="Configure Heading Styles">
+    Select which heading styles to use for different report sections from the styles available in your template.
+  </Step>
+  
+  <Step title="Save Configuration">
+    Save your report settings. Use **Ctrl+S** shortcut (added in version 1.1.788) for quick saves.
+  </Step>
+</Steps>
+
+### Statistical Graphics
+
+<Accordion title="Enabling Charts and Graphs">
+  Configure statistical graphics to visualize vulnerability distribution:
+  
+  - **Vulnerability Count by Risk**: Bar or pie charts showing risk distribution
+  - **Vulnerability Types**: Charts categorizing by vulnerability class
+  - **Custom Colors**: Graphics use your configured risk level colors
+  - **Color Indicators**: Preview your selected colors in configuration
+  
+  <Note>
+  Color indicators for statistical graphics were added in version 2.0.0 to preview how charts will appear in reports.
+  </Note>
+</Accordion>
+
+## Generating Reports
+
+### Report Generation Workflow
+
+<Steps>
+  <Step title="Complete Project Assessment">
+    Ensure your project includes:
+    
+    - All detected vulnerabilities
+    - Evidence screenshots for each finding
+    - Personalized comments and context
+    - Request/response data where applicable
+    - Project metadata (client, dates, scope)
+  </Step>
+  
+  <Step title="Select Report Type">
+    Choose the appropriate report type based on your audience:
+    
+    - Technical for security teams
+    - Executive for management
+    - Generic for mixed audiences
+  </Step>
+  
+  <Step title="Configure Report Options">
+    Set report-specific options:
+    
+    - Include/exclude statistical graphics
+    - Select which vulnerability categories to include
+    - Configure evidence placement
+    - Choose detail level
+  </Step>
+  
+  <Step title="Generate Report">
+    Click Generate Report to create the Word document.
+    
+    <Note>
+    For very large reports (>200 pages), report generation may take some time. A fix in version 1.1.792 addresses timeout issues with large reports.
+    </Note>
+  </Step>
+  
+  <Step title="Review and Customize">
+    The generated Word document can be further customized:
+    
+    - Manual edits to content
+    - Additional formatting adjustments
+    - Adding custom sections
+    - Final quality review
+  </Step>
+</Steps>
+
+### Report Structure
+
+Generated reports follow this typical structure:
+
+1. **Cover Page**: Project name, client, date
+2. **Executive Summary**: High-level findings and recommendations
+3. **Scope and Methodology**: Assessment details and approach
+4. **Statistical Overview**: Charts and graphs (if enabled)
+5. **Vulnerability Findings**: Detailed vulnerability listings by risk level
+   - Description
+   - Impact assessment
+   - Evidence (screenshots, request/response)
+   - Remediation steps
+   - Custom comments
+6. **Conclusion and Recommendations**: Summary and prioritized actions
+7. **Appendices**: Supporting documentation
+
+<Note>
+Since version 2.0.0, vulnerability evidence is placed below the vulnerability description instead of above, providing better report flow.
+</Note>
+
+## Advanced Features
+
+### Evidence Placement
+
+<Accordion title="Screenshot and Evidence Handling">
+  Evidence is automatically formatted in reports:
+  
+  - Screenshots are inserted as images
+  - Maintains aspect ratio and reasonable sizing
+  - Caption with evidence description
+  - Request/response data in formatted code blocks
+  - Custom comments integrated into vulnerability description
+  
+  <Note>
+  Evidence placement was improved in version 2.0.0, moving it below vulnerability descriptions for better readability.
+  </Note>
+</Accordion>
+
+### Multi-language Reports
+
+<Accordion title="Language Support">
+  Generate reports in multiple languages:
+  
+  - **Spanish**: Original language, full support
+  - **English**: Complete translation of report elements
+  - **Russian**: Added in version 2.1.0
+  
+  Template variables and vulnerability descriptions are rendered in the selected language.
+  
+  <Note>
+  Full Unicode support (version 2.1.0) ensures proper rendering of all characters in multi-language reports.
+  </Note>
+</Accordion>
+
+### Temporary File Handling
+
+<Warning>
+When Word generates temporary files during report creation, SVM properly manages these files. A fix in version 2.1.0 resolved cases where the application could hang when Word created temporary files.
+</Warning>
+
+## Troubleshooting
+
+<Accordion title="Microsoft Word Not Installed">
+  **Problem**: Error when generating reports
+  
+  **Solution**: SVM requires Microsoft Word to be installed. Since version 2.0.2, the application provides clear error messages when Office is not available. Install Microsoft Office or ensure Word is properly installed.
+</Accordion>
+
+<Accordion title="Template Variable Not Replaced">
+  **Problem**: Variables like [Subtitulo] appear in the report instead of actual values
+  
+  **Solution**: Ensure variable names are spelled correctly and use the exact case. The [Subtitulo] replacement bug was fixed in version 2.0.2.
+</Accordion>
+
+<Accordion title="Invalid Filename Error">
+  **Problem**: Report generation fails with filename error
+  
+  **Solution**: Project names cannot contain invalid filename characters (`<`, `>`, `:`, `"`, `/`, `\`, `|`, `?`, `*`). This validation was added in version 2.1.2. Rename your project to use only valid characters.
+</Accordion>
+
+<Accordion title="Large Report Timeout">
+  **Problem**: Application freezes or shows "other application is busy" message for large reports
+  
+  **Solution**: For reports larger than 200 pages, generation may take several minutes. A fix in version 1.1.792 improved handling of large reports. Ensure Word is not blocked and wait for completion.
+</Accordion>
+
+<Accordion title="Table Styles Not Applied">
+  **Problem**: Risk-based table styles don't appear in generated reports
+  
+  **Solution**: 
+  - Ensure your Word template contains the table styles you've configured
+  - Re-extract styles by opening the template in Configuration
+  - Verify table style assignments match available styles in template
+  - Check template compatibility (Titulo_SVM style should be present for version 2.0.3+)
+</Accordion>
+
+<Accordion title="Excel Export Issues">
+  **Problem**: Cannot export vulnerability data to Excel
+  
+  **Solution**: Excel export requires Microsoft Excel to be installed. The application was updated in version 2.0.2 to better handle cases where Excel is not available. Ensure Microsoft Excel is properly installed.
+</Accordion>
+
+## Report Quality Best Practices
+
+<Accordion title="Effective Report Writing">
+  To create high-quality security assessment reports:
+  
+  1. **Complete Evidence**: Include comprehensive screenshots and proof for each finding
+  2. **Clear Comments**: Write clear, project-specific comments explaining impact
+  3. **Consistent Naming**: Use consistent vulnerability names across projects
+  4. **Risk Accuracy**: Assign appropriate risk levels based on actual impact
+  5. **Context Matters**: Explain why each vulnerability matters to this specific client
+  6. **Remediation Focus**: Provide actionable, specific remediation steps
+  7. **Professional Formatting**: Use your customized template consistently
+  8. **Quality Review**: Always review generated reports before delivery
+</Accordion>
+
+<Accordion title="Template Maintenance">
+  Keep your report templates effective:
+  
+  - Regularly update branding and styling
+  - Test template with sample data before using in production
+  - Maintain backup copies of working templates
+  - Document custom variables and their usage
+  - Ensure compatibility with Word versions used by clients
+  - Use Titulo_SVM style for maximum compatibility
+</Accordion>
+
+## Export and Sharing
+
+### Report Formats
+
+Generated reports are created as Word documents (`.docx` format):
+
+- Can be converted to PDF for distribution
+- Editable for final customization
+- Compatible with Microsoft Word 2007 and later
+- Can be shared via email or document management systems
+
+### Backup and Archiving
+
+<Note>
+SVM supports database backup functionality for archiving projects and reports. On Windows, Linux, and MacOS (via Wine), you can create backups of your local database containing all projects, vulnerabilities, and evidence.
+</Note>
+
+## Related Documentation
+
+- [Project Management](/features/project-management) - Learn how to structure projects for reporting
+- [Vulnerability Database](/features/vulnerability-database) - Understand vulnerability categorization and details

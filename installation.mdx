@@ -1,0 +1,363 @@
+---
+title: Installation Guide
+description: Step-by-step instructions to install Simple Vulnerability Manager and its integrated security tools
+---
+
+# Installation Guide
+
+Simple Vulnerability Manager can be installed on Windows and Linux systems. The installation process is straightforward and requires minimal configuration.
+
+## System Requirements
+
+<Info>
+  SVM integrates with multiple security tools. While the core application has minimal requirements, integrated tools may have additional dependencies.
+</Info>
+
+### Supported Platforms
+
+- **Windows**: Windows 10 or later
+- **Linux**: Kali Linux, Debian, Ubuntu (including WSL)
+
+### Core Dependencies
+
+<Tabs>
+  <Tab title="Windows">
+    - .NET Framework (included with Windows)
+    - Administrative privileges for installation
+    - Network connectivity for downloading security tools
+  </Tab>
+  <Tab title="Linux">
+    - Python 3.x
+    - Git
+    - Root/sudo privileges
+    - Required packages: `git`, `wget`, `python3`, `python3-pip`, `build-essential`
+  </Tab>
+</Tabs>
+
+## Installing SVM Core
+
+<Steps>
+  <Step title="Download the Installer">
+    Download the latest SVM installer from the official GitHub releases page:
+    
+    ```bash
+    https://github.com/simplevulnerabilitymanager/svm/releases
+    ```
+    
+    **Current Version**: v2.1.3
+  </Step>
+  
+  <Step title="Run the Installer">
+    <Tabs>
+      <Tab title="Windows">
+        1. Double-click the downloaded `.exe` installer
+        2. Follow the installation wizard
+        3. Accept the license agreement
+        4. Choose the installation directory
+        5. Complete the installation
+      </Tab>
+      <Tab title="Linux">
+        1. Extract the downloaded archive
+        2. Navigate to the installation directory
+        3. Run the setup script with sudo privileges
+        
+        ```bash
+        sudo ./install_upgrade_tools_remoto.sh
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Launch SVM">
+    After installation, launch SVM:
+    
+    - **Windows**: Use the Start Menu shortcut or run `svm.exe`
+    - **Linux**: Execute from the installation directory
+    
+    No additional configuration is required to start using the core features.
+  </Step>
+</Steps>
+
+## Installing Integrated Security Tools
+
+SVM integrates with various security tools. You can install them individually based on your needs.
+
+### Linux Tool Installation Script
+
+SVM provides an automated installation script for Linux systems that handles dependencies and tool setup.
+
+<Warning>
+  The installation script requires root privileges and will install system packages. Review the script before execution in production environments.
+</Warning>
+
+#### Script Usage
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh [TOOL_NAME]
+```
+
+#### Available Tools
+
+<AccordionGroup>
+  <Accordion title="Web Scanners">
+    **Arachni**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh Arachni
+    ```
+    
+    Installs Arachni web application scanner with all dependencies including:
+    - Ruby gems: watir, selenium-webdriver, arachni-reactor
+    - Database libraries: SQLite, PostgreSQL, MySQL
+    - Network libraries: curl, libcurl
+  </Accordion>
+  
+  <Accordion title="Service Scanners">
+    **OpenVAS**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh OpenVAS
+    ```
+    
+    Installs OpenVAS vulnerability scanner including:
+    - OpenVAS manager and scanner components
+    - Greenbone Security Assistant (web interface)
+    - Additional tools: nmap, nikto, hydra, nessus plugins
+    - Default credentials: username `admin`, password `OpenVAS`
+    
+    <Note>
+      After installation, OpenVAS will be configured to accept remote connections. The web interface listens on your local IP address.
+    </Note>
+    
+    **OpenVAS Plugin Updates**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh OpenVASPlugins
+    ```
+    
+    **Nmap**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh Nmap
+    ```
+    
+    **Nessus Plugin Updates**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh NessusPlugins
+    ```
+  </Accordion>
+  
+  <Accordion title="Mobile Security Tools">
+    **MobSF (Mobile Security Framework)**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh MobSF
+    ```
+    
+    **QARK (Quick Android Review Kit)**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh Qark
+    ```
+    
+    **ApkTool**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh ApkTools
+    ```
+    
+    **Enjarify**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh Enjarify
+    ```
+    
+    **AndroBugs Framework**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh AndroBugs_Framework
+    ```
+    
+    **Drozer**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh Drozer
+    ```
+    
+    **Android SDK**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh AndroidSDK
+    ```
+  </Accordion>
+  
+  <Accordion title="Information Gathering Tools">
+    **Recon-ng**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh Recon-ng
+    ```
+    
+    **EyeWitness**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh EyeWitness
+    ```
+  </Accordion>
+  
+  <Accordion title="Base Dependencies">
+    **Java**
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh Java
+    ```
+    
+    Installs OpenJDK 9 (or OpenJDK 8 as fallback)
+  </Accordion>
+</AccordionGroup>
+
+#### Install All Tools
+
+```bash
+sudo ./install_upgrade_tools_remoto.sh Todas
+```
+
+<Warning>
+  Installing all tools will take significant time and disk space. Only install tools you need for your security assessments.
+</Warning>
+
+## Windows Subsystem for Linux (WSL) Setup
+
+For Windows 10 users running SVM tools via WSL:
+
+<Steps>
+  <Step title="Install WSL">
+    Install Ubuntu 18.04 or Kali Linux from the Microsoft Store
+  </Step>
+  
+  <Step title="Configure SSH Server">
+    ```bash
+    sudo apt-get install openssh-server
+    cd /etc/ssh/
+    sudo /usr/bin/ssh-keygen -A
+    sudo service ssh --full-restart
+    ```
+  </Step>
+  
+  <Step title="Update SSH Configuration">
+    Edit `/etc/ssh/sshd_config` and add:
+    
+    ```bash
+    sudo nano /etc/ssh/sshd_config
+    ```
+    
+    Add the following line:
+    ```
+    ListenAddress 0.0.0.0
+    ```
+    
+    Restart the SSH service:
+    ```bash
+    sudo service ssh --full-restart
+    sudo update-rc.d ssh enable
+    ```
+  </Step>
+  
+  <Step title="Configure Sudo Access (Optional)">
+    To avoid password prompts during scans:
+    
+    ```bash
+    sudo visudo
+    ```
+    
+    Add (replace `username` with your WSL username):
+    ```
+    username ALL=(ALL) NOPASSWD: ALL
+    ```
+  </Step>
+</Steps>
+
+## Post-Installation Verification
+
+<Steps>
+  <Step title="Launch SVM">
+    Start the SVM application and verify the main interface loads correctly.
+  </Step>
+  
+  <Step title="Check Tool Integration">
+    Verify installed tools are recognized:
+    - Navigate to the tools section in SVM
+    - Check that installed scanners appear in the available tools list
+  </Step>
+  
+  <Step title="Test Database Access">
+    - Access the vulnerability database
+    - Browse categories: Web Scanners, Service Scanners, Mobile
+    - Verify vulnerability descriptions load correctly
+  </Step>
+</Steps>
+
+## Updating SVM
+
+### Core Application Updates
+
+Check for updates regularly:
+1. Visit the [GitHub Releases](https://github.com/simplevulnerabilitymanager/svm/releases) page
+2. Download the latest version
+3. Run the installer to upgrade
+
+### Security Tool Updates
+
+**Linux Script Updates**
+```bash
+# Update all scripts
+sudo ./update_all_scripts.bat
+
+# Update specific tool plugins
+sudo ./install_upgrade_tools_remoto.sh OpenVASPlugins
+sudo ./install_upgrade_tools_remoto.sh NessusPlugins
+```
+
+**Nmap Script Database**
+```bash
+sudo nmap --script-updatedb
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Installation script requires root privileges">
+    **Error**: "You must run this setup script with root privileges."
+    
+    **Solution**: Run the script with sudo:
+    ```bash
+    sudo ./install_upgrade_tools_remoto.sh [TOOL_NAME]
+    ```
+  </Accordion>
+  
+  <Accordion title="OpenVAS service not starting">
+    **Solution**: Restart OpenVAS services manually:
+    ```bash
+    sudo service openvas-scanner restart
+    sudo service openvas-manager restart
+    sudo service greenbone-security-assistant restart
+    ```
+    
+    Or use the Kali shortcut:
+    ```bash
+    sudo openvas-start
+    ```
+  </Accordion>
+  
+  <Accordion title="Tool not detected by SVM">
+    **Solution**: 
+    1. Verify the tool is installed correctly
+    2. Check the installation path matches SVM configuration
+    3. Restart SVM to refresh tool detection
+  </Accordion>
+  
+  <Accordion title="Network connectivity issues with WSL">
+    **Solution**: 
+    - Ensure SSH server is running in WSL
+    - Verify firewall rules allow connections
+    - Check that ListenAddress is set to 0.0.0.0 in sshd_config
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Now that SVM is installed, proceed to the [Quick Start Guide](/quickstart) to run your first vulnerability scan.
+
+<Card
+  title="Quick Start Guide"
+  icon="rocket"
+  href="/quickstart"
+>
+  Learn how to create your first project and run a vulnerability scan
+</Card>

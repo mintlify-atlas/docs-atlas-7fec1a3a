@@ -1,0 +1,286 @@
+---
+title: Project Management
+description: Create and manage security assessment projects for vulnerability tracking
+---
+
+# Project Management
+
+Simple Vulnerability Manager enables you to create and manage dedicated projects for each client's security assessment. Projects serve as containers for organizing vulnerabilities, evidence, screenshots, and custom comments related to specific web applications and IP addresses.
+
+## Overview
+
+Projects are the foundation of SVM's workflow. Each project represents a security assessment for a specific client or system, allowing you to:
+
+- Organize vulnerabilities by web applications and IP addresses
+- Add personalized comments and evidence for each finding
+- Attach screenshots as individual proof for detected vulnerabilities
+- Generate comprehensive reports from project data
+- Track assessment progress and findings over time
+
+<Note>
+You must create or select a project before using most SVM features. The application requires an active project context for vulnerability management and scanning operations.
+</Note>
+
+## Creating a New Project
+
+<Steps>
+  <Step title="Access Project Creation">
+    From the main screen, navigate to the project management section. This is your starting point for all security assessments.
+  </Step>
+  
+  <Step title="Enter Project Details">
+    Provide the following information for your new project:
+    
+    - **Project Name**: A descriptive name for the security assessment
+    - **Client Information**: Details about the client or organization
+    - **Assessment Scope**: Web URLs and IP addresses to be tested
+    - **Notes**: Additional context or special instructions
+    
+    <Warning>
+    Project names cannot contain characters that are invalid for filenames (e.g., `<`, `>`, `:`, `"`, `/`, `\`, `|`, `?`, `*`). The system will prevent report generation if invalid characters are used.
+    </Warning>
+  </Step>
+  
+  <Step title="Configure Web Addresses">
+    Add web applications to your project:
+    
+    - Enter the full URL including protocol (`http://` or `https://`)
+    - Multiple web addresses can be added to a single project
+    - Web addresses are used for launching web scanner tools
+    
+    <Note>
+    Web addresses must include the protocol (`http://` or `https://`) to properly launch scanning tools like Acunetix, Burp Suite, Netsparker, and Arachni.
+    </Note>
+  </Step>
+  
+  <Step title="Add IP Addresses">
+    Configure the IP addresses or domains for service scanning:
+    
+    - Individual IP addresses (e.g., `192.168.1.100`)
+    - IP ranges (e.g., `192.168.1.1-192.168.1.100`)
+    - Domain names (e.g., `example.com`)
+    - Multiple entries can be added per project
+    
+    <Warning>
+    When using Qualys External scanning, note that private IP addresses cannot be scanned from external Qualys instances.
+    </Warning>
+  </Step>
+  
+  <Step title="Save the Project">
+    Save your project to make it active and begin the vulnerability assessment process.
+  </Step>
+</Steps>
+
+## Managing Project Assets
+
+### Adding Web Applications
+
+Web applications are the targets for web vulnerability scanners:
+
+<Tabs>
+  <Tab title="Single URL">
+    Add individual web applications by entering the complete URL:
+    
+    ```
+    https://www.example.com
+    http://app.example.com:8080
+    ```
+  </Tab>
+  
+  <Tab title="Multiple URLs">
+    Add multiple web applications to test different parts of your client's infrastructure:
+    
+    - Main website
+    - Admin panels
+    - API endpoints
+    - Staging environments
+  </Tab>
+  
+  <Tab title="Subdomain Support">
+    Use tools like Recon-ng for domain reconnaissance:
+    
+    - Domains can be entered without protocol for Recon-ng
+    - Automatically discovers subdomains and related infrastructure
+    - Integrates with API services (SHODAN, IPInfoDB, etc.)
+  </Tab>
+</Tabs>
+
+### Managing IP Addresses
+
+<Accordion title="IP Address Formats">
+  SVM supports multiple IP address formats:
+  
+  - **Single IP**: `192.168.1.100`
+  - **IP Range**: `192.168.1.1-192.168.1.100`
+  - **Domain Names**: `example.com` (will be resolved to IP)
+  - **CIDR Notation**: Compatible with Nmap scanning
+  
+  <Note>
+  The DNS resolver feature can automatically convert domain names to IP addresses for service scanning.
+  </Note>
+</Accordion>
+
+<Accordion title="Nmap Integration">
+  Launch Nmap scans directly against project web addresses and domains:
+  
+  - Scan web/domain targets from your project
+  - Execute with a single click from the tools menu
+  - Results can be imported into the project for documentation
+  
+  Since version 2.0.3, you can launch Nmap scans against web/domain entries in your project.
+</Accordion>
+
+## Adding Evidence and Screenshots
+
+### Drag and Drop Support
+
+Starting from version 2.1.2, SVM supports drag-and-drop functionality for adding visual evidence:
+
+<Steps>
+  <Step title="Prepare Your Screenshots">
+    Capture screenshots of vulnerabilities during your security assessment:
+    
+    - Browser screenshots showing XSS or injection flaws
+    - Tool output demonstrating service vulnerabilities
+    - Proof-of-concept images
+  </Step>
+  
+  <Step title="Drag and Drop">
+    Simply drag image files from your file explorer and drop them into:
+    
+    - **Evidence Fields**: For individual vulnerability proof
+    - **Project Screenshots**: For general project documentation
+  </Step>
+  
+  <Step title="Add Comments">
+    Provide context for each piece of evidence:
+    
+    - Explain what the screenshot demonstrates
+    - Describe the impact of the finding
+    - Reference the specific test case or scenario
+  </Step>
+</Steps>
+
+### Evidence Best Practices
+
+<Note>
+Personalized comments and screenshots serve as individual evidence for each vulnerability detected on web addresses and IP addresses. Quality evidence strengthens your security assessment reports.
+</Note>
+
+Recommended evidence to capture:
+
+1. **Request/Response Data**: HTTP requests showing the vulnerability
+2. **Visual Proof**: Screenshots of successful exploitation
+3. **Tool Output**: Scanner results confirming the finding
+4. **Impact Demonstration**: Evidence of potential damage or data exposure
+
+## Project Fields and Customization
+
+### Extended Text Capacity
+
+Since version 2.1.0, SVM expanded the text capacity for several project fields:
+
+- **IP Addresses**: Store extensive IP ranges and network segments
+- **Web Addresses**: Document multiple applications and endpoints
+- **Notes**: Add comprehensive assessment notes and context
+- **Request Data**: Capture full HTTP requests
+- **Response Data**: Store complete HTTP responses
+
+<Accordion title="Unicode Support">
+  Full Unicode support (added in version 2.1.0) enables:
+  
+  - Multi-language project documentation
+  - International client names and addresses
+  - Special characters in comments and notes
+  - Non-ASCII characters in evidence descriptions
+  
+  This makes SVM suitable for international security assessments and multi-regional deployments.
+</Accordion>
+
+## Project Workflow
+
+### Complete Assessment Workflow
+
+<Steps>
+  <Step title="Project Setup">
+    Create the project and configure all target assets (web addresses and IP addresses).
+  </Step>
+  
+  <Step title="Automated Scanning">
+    Launch integrated scanning tools:
+    
+    - **Web Scanners**: Acunetix, Burp Suite, Netsparker, Arachni
+    - **Service Scanners**: Qualys, Nessus, OpenVAS, Nmap
+    - **Mobile Tools**: MobSF, QARK, AndroBugs Framework
+    - **Reconnaissance**: Recon-ng, EyeWitness
+  </Step>
+  
+  <Step title="Import Vulnerabilities">
+    Import scan results and add vulnerabilities from the database to your project.
+  </Step>
+  
+  <Step title="Add Evidence">
+    For each vulnerability:
+    
+    - Attach relevant screenshots
+    - Add personalized comments explaining the context
+    - Include request/response data
+    - Document the specific impact for this client
+  </Step>
+  
+  <Step title="Generate Reports">
+    Create professional Word reports using customizable templates. See the [Report Generation](/features/report-generation) guide for details.
+  </Step>
+</Steps>
+
+## SVM Pro Features
+
+<Accordion title="Server Synchronization">
+  SVM Pro includes advanced project management features:
+  
+  - **Centralized Storage**: Projects stored on SVM server
+  - **Team Collaboration**: Multiple analysts can work on the same project
+  - **Import from Web**: Download projects directly from the SVM web interface
+  - **Encrypted Transfer**: Compressed and encrypted data transfer (version 2.0.2+)
+  - **Remote Access**: Access projects from any SVM Pro client
+  
+  <Note>
+  You can test SVM Pro features using the demo server:
+  - Server: `svm.myddns.me`
+  - Port: `8444`
+  - Token: `svm_demo`
+  </Note>
+</Accordion>
+
+<Accordion title="Standalone vs. Professional">
+  Starting from version 2.1.0, you can run both versions simultaneously:
+  
+  - The executable name (`svm.exe`) is associated with the configuration file (`svm.ini`)
+  - This allows running both Standalone and Professional versions at the same time
+  - Each instance maintains separate project databases and configurations
+</Accordion>
+
+## Troubleshooting
+
+<Accordion title="Project Access Issues">
+  **Problem**: Cannot access vulnerability management features
+  
+  **Solution**: Ensure you have created or selected a project. Most SVM features require an active project context. This requirement was enforced starting in version 1.1.792.
+</Accordion>
+
+<Accordion title="IP Range Format Errors">
+  **Problem**: Errors when using IP ranges in search or scanning
+  
+  **Solution**: Ensure IP ranges use the correct format `192.168.1.1-192.168.1.100`. The hyphen character handling was fixed in version 1.1.792.
+</Accordion>
+
+<Accordion title="Connection Issues (Wine/Linux/MacOS)">
+  **Problem**: Lost connection to SVM Pro server on Wine
+  
+  **Solution**: Updated connection handling was implemented in version 2.1.0 to improve stability on Wine (Linux/MacOS). Ensure you're using the latest version.
+</Accordion>
+
+## Related Documentation
+
+- [Vulnerability Database](/features/vulnerability-database) - Learn about available vulnerability categories
+- [Report Generation](/features/report-generation) - Create professional reports from your projects

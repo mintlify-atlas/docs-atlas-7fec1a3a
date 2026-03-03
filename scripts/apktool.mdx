@@ -1,0 +1,476 @@
+---
+title: Apktool Scripts
+description: APK decoding, building, signing, and installation automation scripts
+---
+
+Apktool scripts automate the complete APK analysis workflow from decompilation to installation. These scripts handle local and remote execution, APK rebuilding, signing with certificates, and device installation.
+
+## Overview
+
+| Script | Purpose | Environment |
+|--------|---------|-------------|
+| `apktool_decode_local.bat` | Decode APK locally | Windows |
+| `apktool_decode_remote.bat` | Decode APK on remote server | Windows (SSH) |
+| `apktool_build_local.bat` | Rebuild APK from source | Windows |
+| `apk_sign_local.bat` | Sign APK with certificate | Windows |
+| `apk_install_local.bat` | Install APK to Android device | Windows |
+
+## Tool Version
+
+**Apktool**: v2.4.0 (from install scripts)
+
+Download: `https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.4.0.jar`
+
+## APK Analysis Workflow
+
+<Steps>
+  <Step title="Decode APK">
+    Decompile the APK to extract resources, manifest, and smali code.
+    
+    Choose local or remote execution based on your environment.
+  </Step>
+  
+  <Step title="Analyze & Modify">
+    Review the decompiled code, AndroidManifest.xml, and resources.
+    
+    Make necessary modifications for security testing or research.
+  </Step>
+  
+  <Step title="Rebuild APK">
+    Recompile the modified source back into an APK file.
+    
+    The build process creates a new APK in the `dist/` subdirectory.
+  </Step>
+  
+  <Step title="Sign APK">
+    Sign the rebuilt APK with a certificate for installation.
+    
+    Uses uber-apk-signer for automatic signing and alignment.
+  </Step>
+  
+  <Step title="Install APK">
+    Install the signed APK to an Android device or emulator.
+    
+    Uses ADB to push and install the application.
+  </Step>
+</Steps>
+
+## apktool_decode_local.bat
+
+Decodes an APK file locally using Apktool, extracting all resources and code.
+
+### Parameters
+
+```batch
+apktool_decode_local.bat <AppExe> <PathAPK> <FileApk> <Timestamp> <Documentacion>
+```
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `AppExe` | Path to apktool.jar | `C:\tools\apktool\apktool.jar` |
+| `PathAPK` | Full path to APK file | `C:\apps\sample.apk` |
+| `FileApk` | APK filename (no extension) | `sample` |
+| `Timestamp` | Unique timestamp identifier | `20230615_143022` |
+| `Documentacion` | Output directory path | `C:\reports` |
+
+### Script Implementation
+
+```batch
+@echo off
+setlocal
+set AppExe=%1
+set PathAPK=%2
+set FileApk=%~n3
+set Timestamp=%4
+set Documentacion=%5
+
+set JAVA="java.exe"
+set FileApk=%FileApk:"=%
+set Documentacion=%Documentacion:"=%
+
+@title=[Apktool - Local] - %FileApk%
+
+copy %PathAPK% "%Documentacion%\%FileApk%_%Timestamp%.apk"
+%JAVA% -jar %AppExe% d "%Documentacion%\%FileApk%_%Timestamp%.apk" -o "%Documentacion%\%FileApk%_%Timestamp%"
+echo "%Documentacion%\%FileApk%_%Timestamp%"
+pause
+```
+
+### Output Structure
+
+```
+Documentacion/
+├── sample_20230615_143022.apk          # Original APK copy
+└── sample_20230615_143022/             # Decoded output
+    ├── AndroidManifest.xml             # Decoded manifest
+    ├── apktool.yml                     # Build metadata
+    ├── res/                            # Resources
+    ├── smali/                          # Dalvik bytecode
+    └── original/                       # Original files
+```
+
+### Usage Example
+
+```batch
+apktool_decode_local.bat ^
+  "C:\tools\apktool\apktool.jar" ^
+  "C:\samples\vulnerable_app.apk" ^
+  "vulnerable_app" ^
+  "20230615_143022" ^
+  "C:\analysis\reports"
+```
+
+## apktool_decode_remote.bat
+
+Decodes an APK file on a remote Linux server via SSH, useful for distributed analysis.
+
+### Parameters
+
+```batch
+apktool_decode_remote.bat <PathAPK> <FileApk> <Timestamp> <Documentacion> <AppExe> <Server> <Username> <Password>
+```
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `PathAPK` | Local path to APK file | `C:\samples\app.apk` |
+| `FileApk` | APK filename (no extension) | `app` |
+| `Timestamp` | Unique timestamp identifier | `20230615_143022` |
+| `Documentacion` | Local output directory | `C:\reports` |
+| `AppExe` | Remote path to apktool.jar | `/root/apktool/apktool.jar` |
+| `Server` | SSH server hostname/IP | `192.168.1.100` |
+| `Username` | SSH username | `root` |
+| `Password` | SSH password | `password123` |
+
+### Workflow
+
+<Steps>
+  <Step title="Upload APK">
+    Transfers APK to `/tmp/` on remote server using `pscp.exe`.
+  </Step>
+  
+  <Step title="Execute Apktool">
+    Runs Apktool on remote server with Java runtime.
+  </Step>
+  
+  <Step title="Archive Results">
+    Creates tar.gz archive of APK and decoded directory.
+  </Step>
+  
+  <Step title="Download Report">
+    Transfers archive back to local machine.
+  </Step>
+  
+  <Step title="Cleanup">
+    Removes temporary files from remote server.
+  </Step>
+</Steps>
+
+### Script Implementation
+
+```batch
+set JAVA=/usr/bin/java
+
+"%~dp0pscp.exe" -P 22 -l %Username% -pw %Password% -C "%PathAPK%" %Server%:"/tmp/%FileApk%_%Timestamp%.apk"
+
+"%~dp0plink.exe" -no-antispoof -ssh -P 22 -l %Username% -pw %Password% -C %Server% ^
+  "cd /tmp ; %JAVA% -jar '%AppExe%' d '/tmp/%FileApk%_%Timestamp%.apk'"
+
+"%~dp0plink.exe" -no-antispoof -ssh -P 22 -l %Username% -pw %Password% -C %Server% ^
+  "cd /tmp ; tar -cvzf 'ApktoolReport - %FileApk%_%Timestamp%.tar.gz' '%FileApk%_%Timestamp%.apk' '%FileApk%_%Timestamp%'"
+
+"%~dp0pscp.exe" -P 22 -l %Username% -pw %Password% -C ^
+  %Server%:"/tmp/ApktoolReport - %FileApk%_%Timestamp%.tar.gz" %Documentacion%
+```
+
+### Usage Example
+
+```batch
+apktool_decode_remote.bat ^
+  "C:\samples\app.apk" ^
+  "app" ^
+  "20230615_143022" ^
+  "C:\reports" ^
+  "/root/apktool/apktool.jar" ^
+  "192.168.1.100" ^
+  "root" ^
+  "password123"
+```
+
+## apktool_build_local.bat
+
+Rebuilds an APK from decoded source code, with optional signing step.
+
+### Parameters
+
+```batch
+apktool_build_local.bat <AppExe> <PathDirAPK> <AppExeSign>
+```
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `AppExe` | Path to apktool.jar | `C:\tools\apktool\apktool.jar` |
+| `PathDirAPK` | Decoded APK directory | `C:\reports\app_20230615_143022` |
+| `AppExeSign` | Path to uber-apk-signer.jar | `C:\tools\uber-apk-signer.jar` |
+
+### Build Process
+
+The script:
+
+1. Extracts the directory name from the path
+2. Builds the APK using Apktool
+3. Creates output in `dist/` subdirectory
+4. Prompts for optional signing
+5. Calls `apk_sign_local.bat` if user confirms
+
+### Script Implementation
+
+```batch
+set JAVA="java.exe"
+set PathDirAPK=%PathDirAPK:"=%
+if %PathDirAPK:~-1% == \ set PathDirAPK=%PathDirAPK:~0,-1%
+for %%i in (%PathDirAPK%) do set LastDirAPK=%%~nxi
+
+%JAVA% -jar %AppExe% b "%PathDirAPK%"
+
+echo "%PathDirAPK%\dist\%LastDirAPK%.apk"
+
+:retry
+echo Want to sign the apk?
+set /p respuesta="Yes/No(y/n)"
+if %respuesta% == y (
+  call apk_sign_local.bat %AppExeSign% "%PathDirAPK%\dist\%LastDirAPK%.apk"
+) else (
+  if %respuesta% == n (
+    goto :fin
+  ) else (
+    goto :retry
+  )
+)
+```
+
+### Output Location
+
+Built APK is created at:
+```
+<PathDirAPK>\dist\<directory_name>.apk
+```
+
+Example:
+```
+C:\reports\app_20230615_143022\dist\app_20230615_143022.apk
+```
+
+### Usage Example
+
+```batch
+apktool_build_local.bat ^
+  "C:\tools\apktool\apktool.jar" ^
+  "C:\reports\app_20230615_143022" ^
+  "C:\tools\uber-apk-signer\uber-apk-signer.jar"
+```
+
+## apk_sign_local.bat
+
+Signs an APK file using uber-apk-signer for installation compatibility.
+
+### Parameters
+
+```batch
+apk_sign_local.bat <AppExe> <PathAPK>
+```
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `AppExe` | Path to uber-apk-signer.jar | `C:\tools\uber-apk-signer.jar` |
+| `PathAPK` | Path to APK file to sign | `C:\apps\modified.apk` |
+
+### Signing Tool
+
+**Uber APK Signer**: v1.0.0
+
+Download: `https://github.com/patrickfav/uber-apk-signer/releases/download/v1.0.0/uber-apk-signer-1.0.0.jar`
+
+The tool automatically:
+- Creates debug keystore if needed
+- Signs the APK
+- Aligns the APK with zipalign
+- Overwrites the original file
+
+### Script Implementation
+
+```batch
+java.exe -jar %AppExe% -a %PathAPK% --overwrite
+echo %PathAPK%
+pause
+```
+
+### Manual Signing (Alternative)
+
+The script includes commented examples for manual signing:
+
+```batch
+# Generate keystore
+keytool -genkey -keystore keystore.ks -alias android -keyalg RSA -keysize 2048 ^
+  -validity 365 -dname "C=US, O=Android, CN=Android Debug"
+
+# Sign APK
+jarsigner -verbose -sigalg MD5withRSA -digestalg SHA1 -keystore keystore.ks ^
+  app.apk android
+
+# Verify alignment
+zipalign -c -v 4 app.apk
+```
+
+### Usage Example
+
+```batch
+apk_sign_local.bat ^
+  "C:\tools\uber-apk-signer\uber-apk-signer.jar" ^
+  "C:\reports\app_20230615_143022\dist\app_20230615_143022.apk"
+```
+
+## apk_install_local.bat
+
+Installs a signed APK to an Android device or emulator using ADB.
+
+### Parameters
+
+```batch
+apk_install_local.bat <PathAPK> <FileAPK> <Timestamp> <Documentacion>
+```
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `PathAPK` | Path to signed APK file | `C:\apps\signed.apk` |
+| `FileAPK` | APK filename | `signed.apk` |
+| `Timestamp` | Unique timestamp identifier | `20230615_143022` |
+| `Documentacion` | Log output directory | `C:\reports` |
+
+### Installation Process
+
+<Steps>
+  <Step title="Kill ADB Server">
+    Stops any running ADB server instances.
+    
+    ```batch
+    adb.exe kill-server
+    ```
+  </Step>
+  
+  <Step title="Start ADB Server">
+    Starts fresh ADB server and detects connected devices.
+    
+    ```batch
+    adb.exe start-server
+    ```
+  </Step>
+  
+  <Step title="Install APK">
+    Pushes and installs APK to connected Android device.
+    
+    ```batch
+    adb.exe install <PathAPK>
+    ```
+  </Step>
+</Steps>
+
+### Script Implementation
+
+```batch
+@echo off
+setlocal
+set PathAPK=%1
+set FileAPK=%2
+set Timestamp=%3
+set Documentacion=%4
+
+set Documentacion=%Documentacion:"=%
+set Documentacion="%Documentacion%\apk_install - %Timestamp%.txt"
+
+@title=[ADB]
+
+echo Kill-server
+"%~dp0adb\windows\adb.exe" kill-server
+
+echo Start-server
+"%~dp0adb\windows\adb.exe" start-server
+
+echo Installing...
+"%~dp0adb\windows\adb.exe" install %PathAPK%
+
+echo Done
+pause
+```
+
+### Prerequisites
+
+- Android device connected via USB with USB debugging enabled
+- ADB drivers installed on Windows
+- Device authorized for debugging (accept RSA key fingerprint)
+
+### Usage Example
+
+```batch
+apk_install_local.bat ^
+  "C:\reports\app_20230615_143022\dist\app_20230615_143022.apk" ^
+  "app_20230615_143022.apk" ^
+  "20230615_143022" ^
+  "C:\reports"
+```
+
+### Troubleshooting
+
+**Device not found:**
+```batch
+# Check connected devices
+adb.exe devices
+
+# Verify USB debugging is enabled on device
+# Accept RSA key fingerprint when prompted
+```
+
+**Installation failed:**
+```batch
+# Uninstall existing app first
+adb.exe uninstall com.example.package
+
+# Try install again
+adb.exe install -r app.apk  # -r flag for reinstall
+```
+
+## Complete Workflow Example
+
+Here's a complete example of analyzing and modifying an APK:
+
+```batch
+# 1. Decode APK locally
+apktool_decode_local.bat ^
+  "C:\tools\apktool\apktool.jar" ^
+  "C:\samples\vulnerable_app.apk" ^
+  "vulnerable_app" ^
+  "20230615_143022" ^
+  "C:\reports"
+
+# 2. Modify the decoded files as needed
+# Edit files in C:\reports\vulnerable_app_20230615_143022\
+
+# 3. Rebuild the APK
+apktool_build_local.bat ^
+  "C:\tools\apktool\apktool.jar" ^
+  "C:\reports\vulnerable_app_20230615_143022" ^
+  "C:\tools\uber-apk-signer\uber-apk-signer.jar"
+# Answer 'y' when prompted to sign
+
+# 4. Install to device
+apk_install_local.bat ^
+  "C:\reports\vulnerable_app_20230615_143022\dist\vulnerable_app_20230615_143022.apk" ^
+  "vulnerable_app_20230615_143022.apk" ^
+  "20230615_143022" ^
+  "C:\reports"
+```
+
+## Related Tools
+
+- **ADB (Android Debug Bridge)**: Platform tools for device communication
+- **JD-GUI**: Java decompiler for viewing DEX bytecode
+- **Enjarify**: Convert Dalvik bytecode to Java bytecode

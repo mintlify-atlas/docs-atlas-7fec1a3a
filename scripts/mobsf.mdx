@@ -1,0 +1,322 @@
+---
+title: MobSF Script
+description: Automated Mobile Security Framework scanning and PDF report generation
+---
+
+The MobSF script automates static analysis of Android APK files using Mobile Security Framework (MobSF). It handles authentication, file upload, analysis execution, and PDF report generation through the MobSF REST API.
+
+## Overview
+
+**Script**: `mobsf.bat`
+
+**Platform**: Windows
+
+**Purpose**: Automated APK static analysis with PDF report generation
+
+## Tool Information
+
+**MobSF**: Mobile Security Framework
+
+- **Repository**: `https://github.com/ajinabraham/Mobile-Security-Framework-MobSF`
+- **Type**: Open-source mobile application security testing framework
+- **Analysis**: Static and dynamic analysis for Android and iOS apps
+
+### Installation
+
+From install scripts (Linux):
+
+```bash
+cd ~
+git clone --depth 1 https://github.com/ajinabraham/Mobile-Security-Framework-MobSF
+cd Mobile-Security-Framework-MobSF
+pip install -r requirements.txt --upgrade
+./setup.sh
+```
+
+### Starting MobSF Server
+
+<Tabs>
+  <Tab title="Windows">
+    ```batch
+    c:\python27\python.exe c:\MobSF\manage.py runserver 0.0.0.0:8000
+    ```
+  </Tab>
+  
+  <Tab title="Linux">
+    ```bash
+    python ./manage.py runserver 0.0.0.0:8000
+    ```
+  </Tab>
+</Tabs>
+
+## Script Parameters
+
+```batch
+mobsf.bat <PathAPK> <FileApk> <Timestamp> <Documentacion> <Server>
+```
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `PathAPK` | Full path to APK file | `C:\samples\app.apk` |
+| `FileApk` | APK filename (no extension) | `app` |
+| `Timestamp` | Unique timestamp identifier | `20230615_143022` |
+| `Documentacion` | Output directory for PDF report | `C:\reports` |
+| `Server` | MobSF server URL | `http://192.168.1.100:8000` |
+
+## Analysis Workflow
+
+<Steps>
+  <Step title="Server Verification">
+    Checks if MobSF server is running and accessible.
+    
+    ```batch
+    curl.exe -s -k "http://192.168.1.100:8000"
+    ```
+    
+    If server is not responding, script prompts user to start MobSF.
+  </Step>
+  
+  <Step title="CSRF Token Retrieval">
+    Obtains CSRF token from MobSF homepage for authenticated requests.
+    
+    ```batch
+    curl.exe -k -H "Referer: %Server%" -D "mobsf_auth.txt" "%Server%"
+    ```
+    
+    Extracts `X-CSRFToken` from response headers.
+  </Step>
+  
+  <Step title="APK Upload">
+    Uploads APK file to MobSF via multipart form POST request.
+    
+    ```batch
+    curl.exe -k -X POST -b "mobsf_auth.txt" ^
+      -H "X-CSRFToken: %TOKEN%" ^
+      -H "Referer: %Server%" ^
+      -F file="@%PathAPK%" ^
+      "%Server%/upload/"
+    ```
+    
+    Response contains file checksum (MD5) for subsequent requests.
+  </Step>
+  
+  <Step title="Static Analysis">
+    Triggers static analysis by accessing the analyzer endpoint.
+    
+    ```batch
+    curl.exe -k -b "mobsf_auth.txt" -H "Referer: %Server%" ^
+      "%Server%/StaticAnalyzer/?name=%FileApk%&type=apk&checksum=%checksum%"
+    ```
+    
+    MobSF performs comprehensive security analysis.
+  </Step>
+  
+  <Step title="PDF Report Generation">
+    Downloads generated PDF report with analysis results.
+    
+    ```batch
+    curl.exe -k -b "mobsf_auth.txt" ^
+      -H "Referer: %Server%/StaticAnalyzer/?name=%FileApk%&type=apk&checksum=%checksum%" ^
+      "%Server%/PDF/?md5=%checksum%&type=APK" ^
+      -o "MobSFReport - %FileApk%_%Timestamp%.pdf"
+    ```
+  </Step>
+  
+  <Step title="Cleanup & Display">
+    Removes temporary authentication files and opens PDF report.
+    
+    Script automatically launches the PDF viewer.
+  </Step>
+</Steps>
+
+## Script Implementation
+
+```batch
+@echo off
+setlocal
+set PathAPK=%1
+set FileApk=%2
+set Timestamp=%3
+set Documentacion=%4
+set Server=%5
+
+set PathAPK=%PathAPK:"=%
+set FileApk=%FileApk:"=%
+set Documentacion=%Documentacion:"=%
+set Documentacion="%Documentacion%\MobSFReport - %FileApk%_%Timestamp%.pdf"
+
+@title=[MobSF] - %FileApk%
+
+# Check if MobSF is running
+"%~dp0curl.exe" -s -k "%Server%"
+if %ERRORLEVEL% NEQ 0 (
+  echo MobSF no iniciado. Inicie sesion por SSH a %Server% y ejecute
+  echo python /root/Mobile-Security-Framework-MobSF/manage.py runserver %Server%
+  pause
+  exit
+)
+
+# Request 1: Get CSRF Token
+"%~dp0curl.exe" -k -H "Referer: %Server%" -D "%TEMP%\mobsf_auth_%Timestamp%.txt" ^
+  "%Server%" > "%TEMP%\mobsf_token_1_%Timestamp%.txt"
+findstr /C:"X-CSRFToken" "%TEMP%\mobsf_token_1_%Timestamp%.txt" > "%TEMP%\mobsf_token_2_%Timestamp%.txt"
+set /p TOKEN=<"%TEMP%\mobsf_token_2_%Timestamp%.txt"
+FOR /F "tokens=1-2" %%A IN ("%TOKEN%") DO set TOKEN=%%B
+set TOKEN=%TOKEN:'=%
+set TOKEN=%TOKEN:)=%
+set TOKEN=%TOKEN:;=%
+
+# Request 2: Upload APK
+"%~dp0curl.exe" -k -X POST -b "%TEMP%\mobsf_auth_%Timestamp%.txt" ^
+  -H "X-CSRFToken: %TOKEN%" -H "Referer: %Server%" ^
+  -F file="@%PathAPK%" "%Server%/upload/" | "%~dp0jq-win32.exe" .url > "%TEMP%\mobsf_json_%Timestamp%.txt"
+set /p requestId=<"%TEMP%\mobsf_json_%Timestamp%.txt"
+
+# Extract checksum from response
+for /f "tokens=1,2,3 delims=:&" %%a in (%requestId%) do set getchecksum=%%c
+for /f "tokens=1,2 delims=:=" %%a in ("%getchecksum%") do set checksum=%%b
+
+# Request 3: Trigger analysis
+"%~dp0curl.exe" -k -b "%TEMP%\mobsf_auth_%Timestamp%.txt" -H "Referer: %Server%" ^
+  "%Server%/StaticAnalyzer/?name=%FileApk%&type=apk&checksum=%checksum%" > NUL
+
+# Request 4: Download PDF report
+"%~dp0curl.exe" -k -b "%TEMP%\mobsf_auth_%Timestamp%.txt" ^
+  -H "Referer: %Server%/StaticAnalyzer/?name=%FileApk%&type=apk&checksum=%checksum%" ^
+  "%Server%/PDF/?md5=%checksum%&type=APK" -o %Documentacion%
+
+# Cleanup
+del /F "%TEMP%\mobsf_auth_%Timestamp%.txt"
+del /F "%TEMP%\mobsf_token_1_%Timestamp%.txt"
+del /F "%TEMP%\mobsf_token_2_%Timestamp%.txt"
+del /F "%TEMP%\mobsf_json_%Timestamp%.txt"
+
+echo %Documentacion%
+start "" /WAIT /I ""%Documentacion%""
+pause
+```
+
+## Output
+
+### PDF Report Contents
+
+The generated PDF report includes:
+
+- **Application Information**: Package name, version, permissions
+- **Security Analysis**: Code vulnerabilities, insecure configurations
+- **Certificate Analysis**: Signing certificate details
+- **Manifest Analysis**: AndroidManifest.xml security issues
+- **Code Analysis**: Hardcoded secrets, insecure APIs, cryptography issues
+- **Binary Analysis**: Native library vulnerabilities
+- **File Analysis**: Resource files, assets, and databases
+
+### Report Location
+
+```
+<Documentacion>\MobSFReport - <FileApk>_<Timestamp>.pdf
+```
+
+Example:
+```
+C:\reports\MobSFReport - vulnerable_app_20230615_143022.pdf
+```
+
+## Usage Example
+
+```batch
+mobsf.bat ^
+  "C:\samples\vulnerable_app.apk" ^
+  "vulnerable_app" ^
+  "20230615_143022" ^
+  "C:\reports" ^
+  "http://192.168.1.100:8000"
+```
+
+## API Endpoints
+
+The script uses these MobSF REST API endpoints:
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/` | GET | Retrieve CSRF token and session cookie |
+| `/upload/` | POST | Upload APK for analysis |
+| `/StaticAnalyzer/` | GET | Trigger static analysis |
+| `/PDF/` | GET | Generate and download PDF report |
+
+## Dependencies
+
+The script requires these utilities in the same directory:
+
+- `curl.exe`: HTTP client for API requests
+- `jq-win32.exe`: JSON parser for extracting response data
+- `pscp.exe`: For remote file transfers (if needed)
+- `plink.exe`: For remote command execution (if needed)
+
+## Troubleshooting
+
+### Server Not Running
+
+```
+Error: MobSF no iniciado
+```
+
+**Solution**: Start MobSF server on the specified host:
+
+```bash
+# SSH to server
+ssh user@192.168.1.100
+
+# Start MobSF
+cd /root/Mobile-Security-Framework-MobSF
+python ./manage.py runserver 0.0.0.0:8000
+```
+
+### Connection Refused
+
+Check firewall settings and ensure MobSF is listening on `0.0.0.0:8000` (not `127.0.0.1:8000`).
+
+### Analysis Taking Too Long
+
+Large APK files or complex applications may take several minutes to analyze. The script waits for analysis completion before generating the PDF.
+
+### Missing CSRF Token
+
+If CSRF token extraction fails, verify that:
+- MobSF server is responding
+- curl.exe can access the server
+- No proxy is interfering with requests
+
+## Security Considerations
+
+- **Credentials**: Script stores cookies in TEMP directory temporarily
+- **HTTPS**: Uses `-k` flag to allow self-signed certificates
+- **Cleanup**: Automatically removes temporary authentication files
+- **Network**: Ensure MobSF server is on trusted network or use VPN
+
+## Advanced Configuration
+
+### Custom Server Port
+
+MobSF can run on custom ports:
+
+```bash
+python ./manage.py runserver 0.0.0.0:9000
+```
+
+Update script calls accordingly:
+```batch
+mobsf.bat ... "http://192.168.1.100:9000"
+```
+
+### Remote Analysis
+
+For remote servers, ensure:
+- Network connectivity to MobSF port
+- No firewall blocking HTTP traffic
+- Sufficient server resources for analysis
+
+## Related Scripts
+
+- `apktool_decode_local.bat`: Decode APK for manual inspection
+- `qark.bat`: Alternative security analysis tool
+- `androbugs_framework.bat`: Another APK security scanner

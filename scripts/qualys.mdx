@@ -1,0 +1,489 @@
+---
+title: Qualys Scripts
+description: Qualys vulnerability scanning and reporting automation scripts
+---
+
+## Overview
+
+The Qualys scripts automate vulnerability scanning, report generation, and scanner appliance management using the Qualys API. Scripts support both internal and external scanners with optional proxy configuration.
+
+## qualys_scan.bat
+
+Launches Qualys vulnerability scans using internal or external scanner appliances.
+
+### Parameters
+
+<ParamField path="Proyecto" type="string" required>
+  Project name for the scan
+</ParamField>
+
+<ParamField path="IP" type="string" required>
+  Target IP addresses or ranges
+</ParamField>
+
+<ParamField path="Username" type="string" required>
+  Qualys account username
+</ParamField>
+
+<ParamField path="Password" type="string" required>
+  Qualys account password
+</ParamField>
+
+<ParamField path="Appliance" type="string" required>
+  Scanner appliance name or "External" for cloud scanners
+</ParamField>
+
+<ParamField path="Policy" type="string" required>
+  Scan option profile title
+</ParamField>
+
+<ParamField path="AutoReport" type="boolean" required>
+  1 = Generate automatic report, 0 = Scan only
+</ParamField>
+
+<ParamField path="Documentacion" type="string" required>
+  Output directory for reports
+</ParamField>
+
+<ParamField path="TypeReport" type="string" required>
+  Report format (pdf, html, xml, csv, mht)
+</ParamField>
+
+<ParamField path="TemplateId" type="string" required>
+  Report template ID (for automatic reports)
+</ParamField>
+
+<ParamField path="Timestamp" type="string" required>
+  Timestamp for unique file naming
+</ParamField>
+
+<ParamField path="UsoProxy" type="boolean" required>
+  1 = Use proxy, 0 = Direct connection
+</ParamField>
+
+<ParamField path="ProxyIP" type="string">
+  Proxy server IP (if UsoProxy=1)
+</ParamField>
+
+<ParamField path="ProxyPort" type="string">
+  Proxy server port (if UsoProxy=1)
+</ParamField>
+
+<ParamField path="ProxyUser" type="string">
+  Proxy authentication username
+</ParamField>
+
+<ParamField path="ProxyPassword" type="string">
+  Proxy authentication password
+</ParamField>
+
+### Usage
+
+**External Scanner:**
+```batch
+qualys_scan.bat "MyProject" "192.168.1.100" "admin" "password" "External" "Initial Options" 1 "C:\Reports" "pdf" "1075927" "20240315_143000" 0
+```
+
+**Internal Scanner with Proxy:**
+```batch
+qualys_scan.bat "MyProject" "10.0.0.50" "admin" "password" "Scanner-NYC" "Full Scan" 1 "C:\Reports" "html" "1075927" "20240315_143000" 1 "proxy.company.com" "8080" "proxyuser" "proxypass"
+```
+
+### Workflow
+
+1. **Authentication** - Login to Qualys API
+2. **Scan Launch** - Start vulnerability scan
+3. **IP Validation** - Auto-add IPs to asset inventory if needed
+4. **Progress Monitoring** - Poll scan status every 60 seconds
+5. **Scan Report** - Generate post-scan report
+6. **Custom Report** - Optional detailed report generation
+7. **Cleanup** - Logout and remove temporary files
+
+### API Endpoints Used
+
+| Endpoint | Purpose |
+|----------|--------|
+| `/api/2.0/fo/session/` | Authentication |
+| `/api/2.0/fo/scan/` | Launch and manage scans |
+| `/msp/asset_ip.php` | Add IPs to asset inventory |
+| `/api/2.0/fo/report/` | Generate and download reports |
+
+### Authentication
+
+**Login:**
+```batch
+curl --compressed -H "X-Requested-With: Curl Sample" \
+  -D auth_cookies.txt \
+  --data "action=login" \
+  --data "username=admin" \
+  --data "password=password" \
+  https://qualysapi.qualys.com/api/2.0/fo/session/
+```
+
+**Session Management:**
+Cookies are stored in temporary files and reused:
+```batch
+curl -b auth_cookies.txt \
+  --data "action=list" \
+  https://qualysapi.qualys.com/api/2.0/fo/scan/
+```
+
+### Proxy Configuration
+
+When `UsoProxy=1`, the script configures proxy settings:
+
+```batch
+set Proxy=--proxy proxy.company.com:8080 --proxy-anyauth --proxy-user username:password
+curl %Proxy% https://qualysapi.qualys.com/...
+```
+
+### Scan Launch
+
+**External Scanner:**
+```batch
+curl --data-urlencode "action=launch" \
+  --data-urlencode "ip=192.168.1.100" \
+  --data-urlencode "scan_title=MyProject" \
+  --data-urlencode "option_title=Initial Options" \
+  https://qualysapi.qualys.com/api/2.0/fo/scan/
+```
+
+**Internal Scanner:**
+```batch
+curl --data-urlencode "action=launch" \
+  --data-urlencode "ip=10.0.0.50" \
+  --data-urlencode "scan_title=MyProject" \
+  --data-urlencode "iscanner_name=Scanner-NYC" \
+  --data-urlencode "option_title=Full Scan" \
+  https://qualysapi.qualys.com/api/2.0/fo/scan/
+```
+
+### IP Auto-Registration
+
+If scan launch fails because IP is not in asset inventory:
+
+```batch
+curl -u admin:password \
+  --data-urlencode "action=add" \
+  --data-urlencode "host_ips=192.168.1.100" \
+  --data-urlencode "tracking_method=ip" \
+  --data-urlencode "owner=admin" \
+  --data-urlencode "comment=MyProject" \
+  https://qualysapi.qualys.com/msp/asset_ip.php
+```
+
+### Status Monitoring
+
+```batch
+curl --data-urlencode "action=list" \
+  --data-urlencode "scan_ref=scan/1234567890.12345" \
+  https://qualysapi.qualys.com/api/2.0/fo/scan/ | \
+  xml.exe sel -t -v "/SCAN_LIST_OUTPUT/RESPONSE/SCAN_LIST/SCAN/STATUS/STATE"
+```
+
+**Possible states:**
+- Running
+- Paused
+- Finished
+- Error
+
+### Error Handling
+
+**Authentication Errors:**
+```xml
+<SIMPLE_RETURN>
+  <RESPONSE>
+    <TEXT>Bad Login/Password</TEXT>
+  </RESPONSE>
+</SIMPLE_RETURN>
+```
+
+**API Throttling:**
+```
+This API cannot be run again for another X hours
+```
+
+**Scan Limit Reached:**
+```
+This limit has already been reached
+```
+
+**Service Maintenance:**
+```
+Service Unavailable
+```
+
+### Report Generation
+
+The script calls `qualys_scan_report.bat` and optionally `qualys_report.bat`:
+
+```batch
+call qualys_scan_report.bat "MyProject" "192.168.1.100" admin password "C:\Reports" pdf 1075927 20240315_143000 0
+
+if %AutoReport% EQU 1 (
+  call qualys_report.bat "MyProject" "192.168.1.100" admin password "C:\Reports" html 1234567 20240315_143000 0
+)
+```
+
+---
+
+## qualys_report.bat
+
+Generates custom Qualys vulnerability reports from asset inventory.
+
+### Parameters
+
+<ParamField path="Proyecto" type="string" required>
+  Project name
+</ParamField>
+
+<ParamField path="IP" type="string" required>
+  Target IP addresses
+</ParamField>
+
+<ParamField path="Username" type="string" required>
+  Qualys username
+</ParamField>
+
+<ParamField path="Password" type="string" required>
+  Qualys password
+</ParamField>
+
+<ParamField path="Documentacion" type="string" required>
+  Output directory
+</ParamField>
+
+<ParamField path="TypeReport" type="string" required>
+  Report format (pdf, html, xml, csv, mht)
+</ParamField>
+
+<ParamField path="TemplateId" type="string" required>
+  Report template ID
+</ParamField>
+
+<ParamField path="Timestamp" type="string" required>
+  Unique timestamp
+</ParamField>
+
+<ParamField path="UsoProxy" type="boolean" required>
+  Proxy usage flag
+</ParamField>
+
+<ParamField path="ProxyIP" type="string">
+  Proxy IP address
+</ParamField>
+
+<ParamField path="ProxyPort" type="string">
+  Proxy port
+</ParamField>
+
+<ParamField path="ProxyUser" type="string">
+  Proxy username
+</ParamField>
+
+<ParamField path="ProxyPassword" type="string">
+  Proxy password
+</ParamField>
+
+### Usage
+
+```batch
+qualys_report.bat "MyProject" "192.168.1.100" "admin" "password" "C:\Reports" "pdf" "1234567" "20240315_143000" 0
+```
+
+### Report Launch
+
+```batch
+curl --data-urlencode "action=launch" \
+  --data-urlencode "ips=192.168.1.100" \
+  --data-urlencode "template_id=1234567" \
+  --data-urlencode "output_format=pdf" \
+  --data-urlencode "report_title=MyProject" \
+  https://qualysapi.qualys.com/api/2.0/fo/report/
+```
+
+### Report Status Polling
+
+```batch
+curl --data "action=list" --data "id=REPORT_ID" \
+  https://qualysapi.qualys.com/api/2.0/fo/report/ | \
+  xml.exe sel -t -v "/REPORT_LIST_OUTPUT/RESPONSE/REPORT_LIST/REPORT/STATUS/STATE"
+```
+
+**States:**
+- Submitted
+- Running
+- Finished
+
+### Report Download
+
+Once state is "Finished":
+
+```batch
+curl https://qualysapi.qualys.com/api/2.0/fo/report/?action=fetch&id=REPORT_ID \
+  -o "QualysReport - 20240315_143000.pdf"
+```
+
+### XML Report Parsing
+
+For XML reports, the script displays vulnerability summaries:
+
+```batch
+type report.xml | xml.exe sel -t \
+  -m "ASSET_DATA_REPORT/GLOSSARY/VULN_DETAILS_LIST/VULN_DETAILS" \
+  -v "QID[@id]" -o " - " -v "TITLE" -n
+```
+
+**Example output:**
+```
+45038 - DNS Server Recursive Query Cache Poisoning Weakness
+86635 - SSL Certificate Cannot Be Trusted
+38173 - Weak Ciphers Supported (SSL/TLS)
+```
+
+**Host-level results:**
+```batch
+type report.xml | xml.exe sel -t \
+  -m "ASSET_DATA_REPORT/HOST_LIST/HOST" \
+  -n -v "IP" \
+  -m "VULN_INFO_LIST/VULN_INFO" \
+  -n -o "  QID:" -v "QID[@id]" \
+  -n -o "  Resultado:" -n -v "RESULT" -n -n
+```
+
+### Output Files
+
+- `QualysReport - {Timestamp}.{TypeReport}` - Generated report
+
+Supported formats:
+- **pdf** - PDF document
+- **html** - HTML report
+- **xml** - XML data
+- **csv** - Comma-separated values
+- **mht** - MHTML web archive
+
+---
+
+## qualys_get_scanner_appliances.bat
+
+Retrieves list of available Qualys scanner appliances.
+
+### Parameters
+
+<ParamField path="Username" type="string" required>
+  Qualys username
+</ParamField>
+
+<ParamField path="Password" type="string" required>
+  Qualys password
+</ParamField>
+
+<ParamField path="Timestamp" type="string" required>
+  Unique timestamp
+</ParamField>
+
+<ParamField path="UsoProxy" type="boolean" required>
+  Proxy usage flag
+</ParamField>
+
+<ParamField path="ProxyIP" type="string">
+  Proxy IP
+</ParamField>
+
+<ParamField path="ProxyPort" type="string">
+  Proxy port
+</ParamField>
+
+<ParamField path="ProxyUser" type="string">
+  Proxy username
+</ParamField>
+
+<ParamField path="ProxyPassword" type="string">
+  Proxy password
+</ParamField>
+
+### Usage
+
+```batch
+qualys_get_scanner_appliances.bat "admin" "password" "20240315_143000" 0
+```
+
+### Implementation
+
+**API Request:**
+```batch
+curl -G --data "action=list" \
+  https://qualysapi.qualys.com/api/2.0/fo/appliance/ \
+  -o scanner_appliances.txt
+```
+
+**Parse Response:**
+```batch
+type scanner_appliances.txt | xml.exe sel -T -t \
+  -m "/APPLIANCE_LIST_OUTPUT/RESPONSE/APPLIANCE_LIST/APPLIANCE" \
+  -o "ID" -v "position()" -o "=" -v "ID" -n \
+  -o "Nombre" -v "position()" -o "=\"" -v "NAME" -o "\"" -n \
+  -o "Ultimo=" -v "last()" -n \
+  > scanner_appliances.ini
+```
+
+### Output Format
+
+The script generates an INI configuration file:
+
+```ini
+[Config]
+ID1=12345
+Nombre1="Scanner-NYC"
+ID2=67890
+Nombre2="Scanner-LAX"
+ID3=11111
+Nombre3="Scanner-LON"
+Ultimo=3
+```
+
+### Output Location
+
+`%TEMP%\qualys_scanner_appliances_{Timestamp}.ini`
+
+### Usage in SVM
+
+The INI file is used to populate scanner selection dropdowns in the SVM interface.
+
+### Error Handling
+
+**API Throttling:**
+```batch
+findstr.exe /C:"This API cannot be run again for another" output.txt
+if %ERRORLEVEL% EQU 0 (
+  echo La API no se puede usar por unas horas
+  exit
+)
+```
+
+**Authentication Failure:**
+```batch
+findstr.exe /C:"Bad Login/Password" output.txt
+if %ERRORLEVEL% EQU 0 (
+  echo Mal Usuario/Contraseña
+  exit
+)
+```
+
+**Maintenance Mode:**
+```batch
+findstr.exe /C:"Service Unavailable" output.txt
+if %ERRORLEVEL% EQU 0 (
+  echo Qualys Planned Maintenance
+  exit
+)
+```
+
+### API Documentation
+
+Qualys API endpoints:
+- **Session:** https://qualysapi.qualys.com/api/2.0/fo/session/
+- **Scan:** https://qualysapi.qualys.com/api/2.0/fo/scan/
+- **Report:** https://qualysapi.qualys.com/api/2.0/fo/report/
+- **Appliance:** https://qualysapi.qualys.com/api/2.0/fo/appliance/
+- **Asset:** https://qualysapi.qualys.com/msp/asset_ip.php

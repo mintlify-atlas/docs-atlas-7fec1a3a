@@ -1,0 +1,174 @@
+---
+title: 'Web Scanners'
+description: 'Automated web application vulnerability scanning tools integrated with SVM'
+---
+
+SVM integrates with leading web application security scanners to automate vulnerability detection in web applications. These tools perform comprehensive security assessments including testing for SQL injection, XSS, CSRF, and other OWASP Top 10 vulnerabilities.
+
+## Available Tools
+
+<CardGroup cols={2}>
+  <Card
+    title="Acunetix"
+    icon="shield-check"
+    href="https://www.acunetix.com/"
+  >
+    Industry-leading web vulnerability scanner supporting both automated and manual testing. SVM supports Acunetix v6.0-10.50 and v11.0+.
+  </Card>
+
+  <Card
+    title="Burpsuite"
+    icon="spider-web"
+    href="https://portswigger.net/burp"
+  >
+    Professional web security testing toolkit with integrated spider, scanner, and proxy. Works with Carbonator extension for automated scanning.
+  </Card>
+
+  <Card
+    title="Netsparker"
+    icon="bug"
+    href="https://www.netsparker.com/"
+  >
+    Automated web application security scanner with proof-based scanning technology to eliminate false positives.
+  </Card>
+
+  <Card
+    title="Arachni"
+    icon="spider"
+    href="https://www.arachni-scanner.com/"
+  >
+    Open-source web application security scanner framework supporting multiple platforms and authentication methods.
+  </Card>
+</CardGroup>
+
+## Tool Capabilities
+
+### Acunetix
+Acunetix performs comprehensive web application security testing with features including:
+
+- Deep crawling with JavaScript rendering (WebKit support)
+- AcuSensor technology for enhanced detection accuracy
+- Port scanning integration for network-level discovery
+- Login sequence replay (.lsr files)
+- Automated PDF report generation
+- Concurrent scan management (up to 5 simultaneous scans)
+
+<Info>
+  **Version Support**: SVM automatically detects whether you're using Acunetix v6.0-10.50 (`wvs_console.exe`) or v11.0+ (`wvsc.exe`) and adjusts execution accordingly.
+</Info>
+
+**Script Reference**: [acunetix_scan.bat](/scripts/acunetix)
+
+### Burpsuite
+Burpsuite integration enables professional web security testing workflows:
+
+- Support for both JAR and EXE distributions
+- Carbonator extension integration for automated crawling
+- Configurable memory allocation (2GB default)
+- Scheme, hostname, and port targeting
+- Custom user-agent and scan configuration
+
+<Info>
+  **Requirements**: Burpsuite Pro license required for automated scanning features. Carbonator extension available at [integrissecurity.com](https://www.integrissecurity.com/index.php?resources=Carbonator)
+</Info>
+
+**Script Reference**: [burpsuite_scan.bat](/scripts/burpsuite)
+
+### Netsparker
+Netsparker provides automated vulnerability scanning with:
+
+- Custom profile support per project
+- Proof-based scanning to minimize false positives
+- HTML report generation
+- Concurrent scan management (up to 2 simultaneous scans)
+- Automated scan queuing and throttling
+
+<Info>
+  **Configuration**: Create named profiles in Netsparker matching your project names for automatic profile selection during scans.
+</Info>
+
+**Script Reference**: [netsparker_scan.bat](/scripts/netsparker)
+
+### Arachni
+Arachni is a feature-rich open-source scanner supporting:
+
+- Remote execution via SSH
+- Login script plugins (browser-based and HTTP-based)
+- Platform-specific checks (Windows/IIS/ASP.NET or Linux/Apache/PHP)
+- Custom scope exclusion patterns
+- Comprehensive audit coverage (links, forms, cookies, headers, JSON, XML, UI inputs)
+- HTML report generation from .afr scan files
+
+<Info>
+  **Authentication**: Supports both browser-based login scripts (Watir/Selenium) and HTTP POST authentication. Login scripts should be placed in the project documentation folder.
+</Info>
+
+**Script Reference**: [arachni_scan_remote.bat](/scripts/arachni)
+
+## Integration Workflow
+
+All web scanners in SVM follow a consistent workflow:
+
+1. **Project Setup**: Select target URL and scanner in SVM
+2. **Configuration**: Login sequences and scan profiles are automatically loaded
+3. **Scan Execution**: Scanner launches with project-specific parameters
+4. **Report Generation**: Results exported to project documentation folder
+5. **Evidence Collection**: Screenshots and findings imported into SVM project
+
+## Authentication Support
+
+Web scanners support various authentication methods:
+
+- **Acunetix**: Login sequence replay files (.lsr)
+- **Burpsuite**: Interactive login and session handling
+- **Netsparker**: Profile-based authentication configuration
+- **Arachni**: Login scripts (Ruby-based) for custom authentication flows
+
+## Output Formats
+
+Each scanner generates reports in standardized formats:
+
+- **Acunetix**: PDF reports and .wvs project files
+- **Burpsuite**: Native Burp project files
+- **Netsparker**: HTML reports with detailed findings
+- **Arachni**: HTML reports (converted from .afr format)
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Scan Scheduling">
+    Use SVM's built-in delay mechanism to stagger multiple scans and avoid overwhelming target applications. Scans automatically queue when concurrent limits are reached.
+  </Accordion>
+
+  <Accordion title="Login Sequences">
+    Test login sequences independently before launching full scans. Ensure session validation patterns (e.g., "Logout" link presence) are correctly configured.
+  </Accordion>
+
+  <Accordion title="Scope Management">
+    Configure exclusion patterns to prevent scanners from triggering logout actions or testing out-of-scope functionality.
+  </Accordion>
+
+  <Accordion title="Resource Allocation">
+    Monitor system resources when running multiple scanners concurrently. Each tool has different memory and CPU requirements.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Service Scanners"
+    icon="network-wired"
+    href="/scanners/service-scanners"
+  >
+    Network and service vulnerability scanning tools
+  </Card>
+
+  <Card
+    title="Script Reference"
+    icon="code"
+    href="/scripts/acunetix"
+  >
+    Detailed script documentation and parameters
+  </Card>
+</CardGroup>

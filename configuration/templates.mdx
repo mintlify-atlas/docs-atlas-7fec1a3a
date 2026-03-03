@@ -1,0 +1,538 @@
+---
+title: Report Templates
+description: Customize Word report templates with styles, risk level colors, and formatting options for professional vulnerability reports
+---
+
+Simple Vulnerability Manager generates professional vulnerability reports using customizable Microsoft Word templates. This guide covers template configuration, style customization, and risk level color schemes.
+
+## Template Overview
+
+SVM uses Word templates (.docx or .dot files) to generate three types of reports:
+
+- **Technical Report** (Informe Técnico) - Detailed technical findings for security teams
+- **Executive Report** (Informe Ejecutivo) - High-level summary for management
+- **Generic Report** (Informe Genérico) - Customizable general-purpose report
+
+<Note>
+The report type is automatically appended to the filename when generating reports (added in version 1.1.791).
+</Note>
+
+## Template Configuration
+
+### Selecting a Template
+
+<Steps>
+  <Step title="Access Template Configuration">
+    Navigate to **Configuration** → **Reports** → **Template**
+  </Step>
+  
+  <Step title="Browse for Template">
+    Click the browse button to select your Word template file.
+  </Step>
+  
+  <Step title="Edit Template">
+    Double-click the template path to open it directly in Microsoft Word for editing (behavior changed in version 2.0.0).
+  </Step>
+</Steps>
+
+<Warning>
+In version 2.0.0, the template opening behavior changed. Double-clicking now opens the actual template file for editing, not a new document based on the template. All changes are saved directly to the template.
+</Warning>
+
+### Template Requirements
+
+Your Word template must include:
+
+- Predefined paragraph styles for headings
+- Table styles for vulnerability listings
+- Placeholder variables for dynamic content
+- Proper page layout and margins
+
+## Style Extraction
+
+SVM automatically extracts available styles from your template.
+
+### Title Styles
+
+<Steps>
+  <Step title="Open Template">
+    Load your template in the configuration dialog.
+  </Step>
+  
+  <Step title="Extract Title Styles">
+    SVM reads all available heading and title styles from the template (added in version 2.0.0).
+  </Step>
+  
+  <Step title="Assign Title Style">
+    Select which style to use for section titles:
+    - Heading 1
+    - Heading 2
+    - Title_SVM (recommended)
+    - Custom styles
+  </Step>
+</Steps>
+
+### Table Styles
+
+<Steps>
+  <Step title="Extract Table Styles">
+    SVM automatically reads all table styles defined in your Word template.
+  </Step>
+  
+  <Step title="Assign Risk Level Styles">
+    Assign a different table style to each risk level:
+    - **Critical**: Bold, red-themed table
+    - **High**: Orange or dark red table
+    - **Medium**: Yellow or amber table
+    - **Low**: Blue or green table
+    - **Informational**: Gray or light blue table
+  </Step>
+</Steps>
+
+<Note>
+The ability to assign different table styles per risk level was introduced in version 2.0.0, enabling better visual distinction between vulnerability severities.
+</Note>
+
+## Risk Level Color Customization
+
+### Configuring Risk Colors
+
+SVM allows complete customization of risk level colors for both tables and statistical charts.
+
+<Steps>
+  <Step title="Access Color Configuration">
+    Navigate to **Configuration** → **Reports** → **Risk Colors**
+  </Step>
+  
+  <Step title="Select Risk Level">
+    Choose the risk level to customize:
+    - Critical
+    - High
+    - Medium
+    - Low
+    - Informational
+  </Step>
+  
+  <Step title="Choose Color">
+    Click the color selector to open the standard Windows color picker dialog (changed in version 2.0.2 for better compatibility).
+  </Step>
+  
+  <Step title="Copy RGB Code">
+    Use the "Copy RGB Code" button to copy color values for use in statistical charts (added in version 2.0.0).
+  </Step>
+</Steps>
+
+### Color Application
+
+Risk colors are applied to:
+
+- **Vulnerability tables**: Background colors for risk level indicators
+- **Statistical charts**: Pie charts and bar graphs showing vulnerability distribution
+- **Summary sections**: Visual risk indicators in executive summaries
+
+<Note>
+Color indicators showing your selected colors for statistical charts were added in version 2.0.0, making it easier to ensure consistent color schemes across your reports.
+</Note>
+
+### Recommended Color Schemes
+
+#### Traditional Security Colors
+
+```
+Critical:    RGB(192, 0, 0)     - Dark Red
+High:        RGB(255, 102, 0)   - Orange
+Medium:      RGB(255, 192, 0)   - Amber/Yellow
+Low:         RGB(0, 176, 80)    - Green
+Info:        RGB(0, 112, 192)   - Blue
+```
+
+#### High Contrast Scheme
+
+```
+Critical:    RGB(139, 0, 0)     - Dark Red
+High:        RGB(255, 69, 0)    - Red-Orange
+Medium:      RGB(255, 215, 0)   - Gold
+Low:         RGB(50, 205, 50)   - Lime Green
+Info:        RGB(70, 130, 180)  - Steel Blue
+```
+
+#### Colorblind-Friendly Scheme
+
+```
+Critical:    RGB(213, 94, 0)    - Vermillion
+High:        RGB(230, 159, 0)   - Orange
+Medium:      RGB(240, 228, 66)  - Yellow
+Low:         RGB(0, 158, 115)   - Bluish Green
+Info:        RGB(86, 180, 233)  - Sky Blue
+```
+
+## Template Variables
+
+SVM supports dynamic variables that are replaced when generating reports.
+
+### Project Variables
+
+- `[Proyecto]` - Project name (can be used in vulnerability details as of version 1.1.789)
+- `[Cliente]` - Client name
+- `[Fecha]` - Report generation date
+- `[Titulo]` - Report title
+- `[Subtitulo]` - Report subtitle
+
+### Vulnerability Variables
+
+- `[NombreVulnerabilidad]` - Vulnerability name
+- `[Riesgo]` - Risk level (Critical, High, Medium, Low, Info)
+- `[Descripcion]` - Vulnerability description
+- `[Impacto]` - Impact assessment
+- `[Solucion]` - Remediation steps
+- `[IP]` - Affected IP address
+- `[Web]` - Affected web URL
+- `[Evidencia]` - Evidence screenshots and notes
+- `[Request]` - HTTP request details
+- `[Response]` - HTTP response details
+
+<Note>
+The `[Subtitulo]` variable replacement was fixed in version 2.0.2 to properly display the subtitle value in generated reports.
+</Note>
+
+### Variable Usage in Templates
+
+```
+# Vulnerability Report for [Proyecto]
+Client: [Cliente]
+Date: [Fecha]
+
+## [Titulo]
+[Subtitulo]
+
+### Vulnerability: [NombreVulnerabilidad]
+Risk Level: [Riesgo]
+
+Description:
+[Descripcion]
+
+Impact:
+[Impacto]
+
+Remediation:
+[Solucion]
+```
+
+## Report Structure Configuration
+
+### Report Types
+
+<Steps>
+  <Step title="Select Report Type">
+    In the configuration dialog, choose the report type to configure:
+    - Technical Report
+    - Executive Report
+    - Generic Report
+  </Step>
+  
+  <Step title="Configure Sections">
+    The configuration interface properly shows/hides textboxes when changing report types (fixed in version 1.1.788).
+  </Step>
+  
+  <Step title="Save Configuration">
+    Use **Ctrl+S** shortcut to quickly save report configuration (added in version 1.1.788).
+  </Step>
+</Steps>
+
+### Statistical Charts
+
+<Steps>
+  <Step title="Enable Statistical Charts">
+    Navigate to **Configuration** → **Reports** → **Statistical Charts**
+  </Step>
+  
+  <Step title="Configure Chart Options">
+    Select which statistical visualizations to include:
+    - Vulnerability distribution by risk level
+    - Vulnerabilities by category
+    - Affected systems summary
+  </Step>
+  
+  <Step title="Verify Color Settings">
+    The configuration properly saves the statistical chart option (fixed in version 2.0.3).
+  </Step>
+</Steps>
+
+<Warning>
+A bug in version 2.0.2 and earlier prevented the statistical charts configuration from being saved correctly. Ensure you're using version 2.0.3 or later for reliable chart configuration.
+</Warning>
+
+## Evidence Placement
+
+### Evidence Position Configuration
+
+Evidence placement was reorganized in version 2.0.0:
+
+- **Old behavior**: Evidence placed above vulnerability description
+- **New behavior**: Evidence placed below vulnerability description for better readability
+
+This provides a more logical flow:
+1. Vulnerability name and risk level
+2. Description of the vulnerability
+3. Impact assessment
+4. Remediation steps
+5. Evidence (screenshots, requests/responses)
+
+## Template Compatibility
+
+### Word Template Format
+
+SVM supports the new Word template format introduced in version 2.0.3:
+
+- **Template Name**: `Titulo_SVM`
+- **Compatibility**: Better support for English and Spanish versions of Microsoft Word
+- **Format**: .docx or .dot
+
+<Note>
+The new template format ensures consistent rendering across different language versions of Microsoft Word, resolving formatting issues present in earlier versions.
+</Note>
+
+### Large Report Handling
+
+For reports exceeding 200 pages:
+
+<Steps>
+  <Step title="Enable Large Report Mode">
+    SVM automatically detects large reports during generation.
+  </Step>
+  
+  <Step title="Avoid Word Busy Errors">
+    Version 1.1.792 fixed the "This action cannot be completed because the other application is busy" error for large reports.
+  </Step>
+  
+  <Step title="Monitor Generation">
+    Large report generation may take several minutes. Do not interrupt the process.
+  </Step>
+</Steps>
+
+<Warning>
+When generating very large reports (200+ pages), do not switch to other applications or use Word while SVM is generating the report. Version 1.1.792 improved handling, but Word can still become unresponsive if interrupted.
+</Warning>
+
+## Template Editing Best Practices
+
+### Preserving Template Integrity
+
+<Steps>
+  <Step title="Create a Backup">
+    Always create a backup of your template before making significant changes.
+  </Step>
+  
+  <Step title="Test with Sample Data">
+    Generate a test report with a few vulnerabilities to verify formatting before using with large projects.
+  </Step>
+  
+  <Step title="Maintain Variable Syntax">
+    Ensure variable placeholders maintain exact syntax (case-sensitive, brackets included).
+  </Step>
+</Steps>
+
+### Style Management
+
+<Steps>
+  <Step title="Define Clear Style Names">
+    Use descriptive style names that indicate their purpose (e.g., "VulnTable_Critical", "VulnTable_High").
+  </Step>
+  
+  <Step title="Lock Style Definitions">
+    In Word, lock style definitions to prevent accidental modifications during report generation.
+  </Step>
+  
+  <Step title="Use Built-in Styles">
+    Base custom styles on Word built-in styles for maximum compatibility.
+  </Step>
+</Steps>
+
+### Table Formatting
+
+Create separate table styles for each risk level:
+
+```
+Style Name: VulnTable_Critical
+- Border: 2pt solid, RGB(192, 0, 0)
+- Header Row: Dark red background, white text
+- Alternate Rows: Light red shading
+
+Style Name: VulnTable_High  
+- Border: 2pt solid, RGB(255, 102, 0)
+- Header Row: Orange background, white text
+- Alternate Rows: Light orange shading
+
+[Continue for Medium, Low, Info...]
+```
+
+## Temporary File Handling
+
+### Word Temporary Files
+
+<Steps>
+  <Step title="Understand Temporary File Usage">
+    SVM creates temporary Word files during report generation.
+  </Step>
+  
+  <Step title="Avoid File Locks">
+    Version 2.1.0 fixed issues where opening temporary Word files could hang the program in certain cases.
+  </Step>
+  
+  <Step title="Automatic Cleanup">
+    SVM automatically cleans up temporary files after report generation completes.
+  </Step>
+</Steps>
+
+<Note>
+If SVM or Word crashes during report generation, manually delete temporary files from your system's temp directory.
+</Note>
+
+## Multi-Language Template Support
+
+### Creating Multi-Language Templates
+
+SVM supports three interface languages, and templates should be localized accordingly:
+
+<Steps>
+  <Step title="Create Language-Specific Templates">
+    Maintain separate templates for each language:
+    - `template_en.docx` - English
+    - `template_es.docx` - Spanish  
+    - `template_ru.docx` - Russian
+  </Step>
+  
+  <Step title="Localize Static Text">
+    Translate all static text in the template (headers, labels, instructions).
+  </Step>
+  
+  <Step title="Keep Variables Unchanged">
+    Variable placeholders (`[Proyecto]`, `[Riesgo]`, etc.) remain the same across all language templates.
+  </Step>
+</Steps>
+
+### Language-Specific Formatting
+
+Consider language-specific formatting requirements:
+
+- **Russian**: Requires proper Cyrillic font support (Unicode support added in version 2.1.0)
+- **Spanish**: Include proper accented characters (á, é, í, ó, ú, ñ)
+- **English**: Standard Latin character set
+
+<Note>
+Full Unicode support introduced in version 2.1.0 ensures proper rendering of all characters across all supported languages.
+</Note>
+
+## Advanced Template Features
+
+### Conditional Sections
+
+While SVM doesn't natively support conditional sections, you can work around this:
+
+<Steps>
+  <Step title="Create Multiple Templates">
+    Maintain different templates for different report scenarios (web-only, network-only, comprehensive).
+  </Step>
+  
+  <Step title="Select Template Per Report">
+    Choose the appropriate template when configuring each report generation.
+  </Step>
+</Steps>
+
+### Custom Branding
+
+<Steps>
+  <Step title="Add Company Logo">
+    Insert your company logo in the template header or footer.
+  </Step>
+  
+  <Step title="Configure Color Scheme">
+    Match risk level colors to your corporate color scheme while maintaining clear risk distinction.
+  </Step>
+  
+  <Step title="Add Contact Information">
+    Include company contact details, website, and social media in the template footer.
+  </Step>
+</Steps>
+
+### Screenshot Integration
+
+Evidence screenshots are automatically inserted into the template:
+
+- Screenshots maintain aspect ratio
+- Maximum width: Page width minus margins
+- Automatic placement below vulnerability description
+- Support for multiple screenshots per vulnerability
+
+<Note>
+Version 2.1.2 added drag-and-drop support for adding images to evidence and project screenshots, making evidence collection more efficient.
+</Note>
+
+## Troubleshooting Templates
+
+### Common Template Issues
+
+<Warning>
+**Invalid Characters in Filenames**: Version 2.1.2 fixed an error when generating Word reports if the project name contained invalid filename characters. The system now automatically sanitizes filenames.
+</Warning>
+
+### Template Errors
+
+If report generation fails:
+
+1. **Verify Microsoft Word Installation**: Ensure Word is properly installed and activated
+2. **Check Template Integrity**: Open the template manually in Word to verify it's not corrupted
+3. **Validate Variable Syntax**: Ensure all variables use correct bracket syntax `[Variable]`
+4. **Test with Simple Template**: Try generating a report with a minimal template to isolate the issue
+5. **Review Error Messages**: Version 2.0.1 improved error messaging when Word/Excel is not installed
+
+### Style Recognition Issues
+
+If styles aren't appearing in SVM:
+
+<Steps>
+  <Step title="Reload Template">
+    Close and reopen the configuration dialog to force a template reload.
+  </Step>
+  
+  <Step title="Check Style Scope">
+    Ensure styles are document-level, not character-level or paragraph-specific.
+  </Step>
+  
+  <Step title="Verify Template Path">
+    Confirm the template path in configuration points to the correct file.
+  </Step>
+</Steps>
+
+## Report Generation Optimization
+
+### Performance Tips
+
+For faster report generation:
+
+1. **Minimize Template Complexity**: Use simple formatting where possible
+2. **Optimize Images**: Compress evidence screenshots before adding to SVM
+3. **Limit Chart Complexity**: Statistical charts with many data points take longer to render
+4. **Close Other Applications**: Free up system resources during large report generation
+
+### Batch Report Generation
+
+When generating multiple reports:
+
+<Steps>
+  <Step title="Configure Template Once">
+    Set up your template configuration and save it before starting batch operations.
+  </Step>
+  
+  <Step title="Generate Sequentially">
+    Generate reports one at a time to avoid resource conflicts with Microsoft Word.
+  </Step>
+  
+  <Step title="Monitor Progress">
+    Watch the SVM status bar for progress updates during generation.
+  </Step>
+</Steps>
+
+<Note>
+SVM's report configuration is persistent across sessions, so you only need to configure templates and styles once per report type.
+</Note>

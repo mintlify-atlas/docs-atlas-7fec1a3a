@@ -1,0 +1,449 @@
+---
+title: QARK Scripts
+description: Quick Android Review Kit automated security analysis scripts
+---
+
+QARK (Quick Android Review Kit) scripts automate security analysis of Android APK files by identifying vulnerabilities and generating exploit APKs. These scripts support remote Linux execution with automated reporting.
+
+## Overview
+
+| Script | Purpose | Platform |
+|--------|---------|----------|
+| `qark.bat` | Orchestrate remote QARK analysis | Windows (SSH client) |
+| `qark.sh` | Execute QARK analysis on Linux | Linux |
+
+## Tool Information
+
+**QARK**: Quick Android Review Kit
+
+- **Developer**: LinkedIn
+- **Repository**: `https://github.com/linkedin/qark`
+- **Type**: Static analysis and exploit generation tool
+- **Purpose**: Identify Android application vulnerabilities and create proof-of-concept exploits
+
+### Installation
+
+From install scripts (Linux):
+
+```bash
+cd ~
+git clone --depth 1 https://github.com/linkedin/qark
+cd qark
+
+# Download Android SDK tools
+cd $HOME/qark/
+wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip -O sdk-tools-linux-4333796.zip
+unzip sdk-tools-linux-4333796.zip
+echo y | tools/android update sdk --no-ui
+
+# Install QARK
+pip install -r requirements.txt
+python ./setup.py install
+```
+
+## qark.bat
+
+Windows batch script that orchestrates remote QARK analysis on a Linux server.
+
+### Parameters
+
+```batch
+qark.bat <DirApp> <PathAPK> <FileApk> <Timestamp> <Documentacion> <Server> <Username> <Password>
+```
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `DirApp` | QARK installation directory on server | `/root/qark` |
+| `PathAPK` | Local path to APK file | `C:\samples\app.apk` |
+| `FileApk` | APK filename (no extension) | `app` |
+| `Timestamp` | Unique timestamp identifier | `20230615_143022` |
+| `Documentacion` | Local output directory | `C:\reports` |
+| `Server` | SSH server hostname/IP | `192.168.1.100` |
+| `Username` | SSH username | `root` |
+| `Password` | SSH password | `password123` |
+
+### Analysis Workflow
+
+<Steps>
+  <Step title="Upload APK">
+    Transfers APK file to `/tmp/` directory on remote server.
+    
+    ```batch
+    pscp.exe -l %Username% -pw %Password% -C ^
+      "%PathAPK%" %Server%:"/tmp/%FileApk%_%Timestamp%.apk"
+    ```
+  </Step>
+  
+  <Step title="Upload Helper Script">
+    Transfers `qark.sh` helper script to server.
+    
+    ```batch
+    pscp.exe -l %Username% -pw %Password% -C ^
+      "qark.sh" %Server%:"/tmp/qark.sh"
+    ```
+    
+    Converts line endings from Windows to Unix format.
+  </Step>
+  
+  <Step title="Manual Execution Prompt">
+    Script pauses and instructs user to manually run QARK on server.
+    
+    ```
+    cd "/root/qark" ; chmod 755 ./qark.sh ; ./qark.sh "/root/qark" "app_20230615_143022"
+    ```
+    
+    User must SSH to server and execute command, then press key to continue.
+  </Step>
+  
+  <Step title="Archive Results">
+    Creates tar.gz archive of analysis results.
+    
+    ```bash
+    cd '/root/qark/qark'
+    tar -cvzf '/tmp/QarkReport - app_20230615_143022.tar.gz' \
+      '/tmp/app_20230615_143022.apk' \
+      'Report_app_20230615_143022/' \
+      logs/ \
+      exploit/
+    ```
+  </Step>
+  
+  <Step title="Download Report">
+    Transfers archive back to local Windows machine.
+    
+    ```batch
+    pscp.exe -P 22 -l %Username% -pw %Password% -C ^
+      %Server%:"/tmp/QarkReport - %FileApk%_%Timestamp%.tar.gz" ^
+      %Documentacion%
+    ```
+  </Step>
+  
+  <Step title="Cleanup">
+    Removes temporary files from remote server.
+    
+    ```bash
+    rm -f '/tmp/QarkReport - app_20230615_143022.tar.gz' '/root/qark/qark.sh'
+    ```
+  </Step>
+</Steps>
+
+### Script Implementation
+
+```batch
+@echo off
+setlocal
+set DirApp=%1
+set PathAPK=%2
+set FileApk=%3
+set Timestamp=%4
+set Documentacion=%5
+set Server=%6
+set Username=%7
+set Password=%8
+
+set PathAPK=%PathAPK:"=%
+set FileApk=%FileApk:"=%
+set DirApp=%DirApp:"=%
+set Documentacion=%Documentacion:"=%
+set Documentacion="%Documentacion%\QarkReport - %FileApk%_%Timestamp%.tar.gz"
+
+@title=[Qark] - %FileApk%
+
+# Upload APK
+"%~dp0pscp.exe" -l %Username% -pw %Password% -C ^
+  "%PathAPK%" %Server%:"/tmp/%FileApk%_%Timestamp%.apk"
+
+# Upload helper script
+"%~dp0pscp.exe" -l %Username% -pw %Password% -C ^
+  "%~dp0qark.sh" %Server%:"/tmp/qark.sh"
+
+# Convert line endings
+"%~dp0plink.exe" -P 22 -ssh -l %Username% -pw %Password% -C %Server% ^
+  "tr -d '\15\32' < /tmp/qark.sh > '%DirApp%/qark.sh'"
+
+"%~dp0plink.exe" -P 22 -ssh -l %Username% -pw %Password% -C %Server% ^
+  "rm -f '/tmp/qark.sh'"
+
+:retry
+cls
+echo Ejecutar en el server %Server% el comando:
+echo cd "%DirApp%" ; chmod 755 ./qark.sh ; ./qark.sh "%DirApp%" "%FileApk%_%Timestamp%"
+echo Solo cuando termine, presione una tecla para obtener el reporte
+set /p respuesta="Desea continuar? (y/n)"
+pause
+
+if %respuesta% == y (
+  # Archive results
+  "%~dp0plink.exe" -P 22 -ssh -l %Username% -pw %Password% -C %Server% ^
+    "cd '%DirApp%/qark' ; tar -cvzf '/tmp/QarkReport - %FileApk%_%Timestamp%.tar.gz' ^
+    '/tmp/%FileApk%_%Timestamp%.apk' 'Report_%FileApk%_%Timestamp%/' logs/ exploit/"
+  
+  # Download archive
+  "%~dp0pscp.exe" -P 22 -l %Username% -pw %Password% -C ^
+    %Server%:"/tmp/QarkReport - %FileApk%_%Timestamp%.tar.gz" %Documentacion%
+  
+  # Cleanup
+  "%~dp0plink.exe" -P 22 -ssh -l %Username% -pw %Password% -C %Server% ^
+    "rm -f '/tmp/QarkReport - %FileApk%_%Timestamp%.tar.gz' '%DirApp%/qark.sh'"
+  
+  echo %Documentacion%
+  pause
+) else (
+  if %respuesta% == n (
+    goto :fin
+  ) else (
+    goto :retry
+  )
+)
+
+:fin
+```
+
+### Usage Example
+
+```batch
+qark.bat ^
+  "/root/qark" ^
+  "C:\samples\vulnerable_app.apk" ^
+  "vulnerable_app" ^
+  "20230615_143022" ^
+  "C:\reports" ^
+  "192.168.1.100" ^
+  "root" ^
+  "password123"
+```
+
+## qark.sh
+
+Linux shell script that executes QARK analysis with proper parameters.
+
+### Parameters
+
+```bash
+qark.sh <DirApp> <APK>
+```
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `DirApp` | QARK installation directory | `/root/qark` |
+| `APK` | APK filename in /tmp (no extension) | `vulnerable_app_20230615_143022` |
+
+### Script Implementation
+
+```bash
+#!/bin/bash
+DirApp=$1
+APK=$(echo $2 | sed 's/"//g')
+
+cd $DirApp
+
+# Clean previous results
+rm -fr report/build/ logs/ exploit/
+
+# Run QARK analysis
+qark --apk "/tmp/$APK.apk" \
+     --debug \
+     --exploit-apk \
+     --report-type html \
+     --sdk-path tools/
+
+# Copy exploit APK if generated
+if [ -f build/qark/app/build/outputs/apk/app-debug.apk ] ; then
+    mkdir exploit/
+    cp build/qark/app/build/outputs/apk/app-debug.apk exploit/
+fi
+
+if [ -f build/qark/app/build/outputs/apk/app-debug-unaligned.apk ] ; then
+    mkdir exploit/
+    cp build/qark/app/build/outputs/apk/app-debug-unaligned.apk exploit/
+fi
+```
+
+### QARK Command Options
+
+| Option | Purpose |
+|--------|---------|
+| `--apk` | Path to APK file to analyze |
+| `--debug` | Enable debug output for troubleshooting |
+| `--exploit-apk` | Generate exploit APK for identified vulnerabilities |
+| `--report-type html` | Generate HTML format report |
+| `--sdk-path tools/` | Path to Android SDK tools |
+
+### Analysis Output
+
+The script generates:
+
+1. **HTML Report**: Detailed vulnerability findings in `Report_<APK>/`
+2. **Logs**: Analysis execution logs in `logs/`
+3. **Exploit APKs**: Proof-of-concept exploits in `exploit/`
+
+## Output Structure
+
+After analysis, the tar.gz archive contains:
+
+```
+QarkReport - vulnerable_app_20230615_143022.tar.gz
+├── /tmp/vulnerable_app_20230615_143022.apk   # Original APK
+├── Report_vulnerable_app_20230615_143022/     # HTML report
+│   ├── index.html                             # Main report page
+│   ├── css/                                   # Stylesheets
+│   └── ...                                    # Report assets
+├── logs/                                      # Analysis logs
+│   └── qark.log                               # Execution log
+└── exploit/                                   # Exploit APKs
+    ├── app-debug.apk                          # Signed exploit
+    └── app-debug-unaligned.apk                # Unsigned exploit
+```
+
+## Vulnerability Detection
+
+QARK identifies common Android security issues:
+
+### Security Checks
+
+- **Exported Components**: Activities, services, receivers without protection
+- **Intent Vulnerabilities**: Implicit intents, intent injection
+- **WebView Issues**: JavaScript enabled, file access, XSS vulnerabilities
+- **Cryptography**: Weak algorithms, hardcoded keys, insecure random
+- **Data Storage**: World-readable files, unencrypted databases
+- **Network Security**: Clear-text traffic, SSL/TLS issues
+- **Permissions**: Dangerous permissions, custom permission issues
+- **Code Obfuscation**: ProGuard configuration analysis
+
+### Exploit Generation
+
+QARK automatically generates exploit APKs for:
+
+- Exported component exploitation
+- Intent hijacking
+- Broadcast theft
+- Activity hijacking
+- Service manipulation
+
+## Manual Execution Workflow
+
+<Tabs>
+  <Tab title="Windows to Linux">
+    1. **Run qark.bat** on Windows machine
+    2. **Wait for prompt** to execute on server
+    3. **SSH to Linux server** in separate terminal
+    4. **Execute command** shown in prompt:
+       ```bash
+       cd "/root/qark"
+       chmod 755 ./qark.sh
+       ./qark.sh "/root/qark" "vulnerable_app_20230615_143022"
+       ```
+    5. **Wait for completion** (may take several minutes)
+    6. **Return to Windows** terminal and press key
+    7. **Archive downloads** automatically
+  </Tab>
+  
+  <Tab title="Direct Linux">
+    ```bash
+    # Upload APK
+    scp vulnerable_app.apk root@192.168.1.100:/tmp/vulnerable_app_20230615_143022.apk
+    
+    # SSH to server
+    ssh root@192.168.1.100
+    
+    # Run QARK
+    cd /root/qark
+    qark --apk "/tmp/vulnerable_app_20230615_143022.apk" \
+         --debug \
+         --exploit-apk \
+         --report-type html \
+         --sdk-path tools/
+    
+    # Archive results
+    cd /root/qark/qark
+    tar -cvzf /tmp/QarkReport.tar.gz \
+      /tmp/vulnerable_app_20230615_143022.apk \
+      Report_vulnerable_app_20230615_143022/ \
+      logs/ \
+      exploit/
+    
+    # Download
+    scp root@192.168.1.100:/tmp/QarkReport.tar.gz ./
+    ```
+  </Tab>
+</Tabs>
+
+## Troubleshooting
+
+### Script Not Found
+
+```
+bash: ./qark.sh: No such file or directory
+```
+
+**Solution**: Ensure qark.sh was uploaded and has correct permissions:
+
+```bash
+ls -la /root/qark/qark.sh
+chmod 755 /root/qark/qark.sh
+```
+
+### Line Ending Issues
+
+```
+bash: ./qark.sh: /bin/bash^M: bad interpreter
+```
+
+**Solution**: Script includes `tr -d '\15\32'` to fix Windows line endings automatically.
+
+### QARK Not Installed
+
+```
+qark: command not found
+```
+
+**Solution**: Install QARK using installation commands:
+
+```bash
+cd ~/qark
+python ./setup.py install
+```
+
+### Missing Android SDK
+
+```
+Error: Android SDK not found
+```
+
+**Solution**: Download and configure SDK tools:
+
+```bash
+cd $HOME/qark/
+wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
+unzip sdk-tools-linux-4333796.zip
+echo y | tools/android update sdk --no-ui
+```
+
+### Exploit APK Not Generated
+
+If no exploit APK appears in `exploit/` directory:
+
+- No exploitable vulnerabilities found
+- Build process failed (check logs/)
+- Android SDK tools not properly configured
+
+## Performance Considerations
+
+- **Analysis Time**: 5-15 minutes for typical APK
+- **Large APKs**: May take 30+ minutes for complex applications
+- **Server Resources**: Requires adequate CPU and memory
+- **Network**: Upload/download time depends on APK size and connection speed
+
+## Security Best Practices
+
+- **Credential Management**: Avoid hardcoding passwords in scripts
+- **Secure Transport**: Use SSH keys instead of passwords when possible
+- **Network Security**: Ensure SSH traffic is on trusted network
+- **Cleanup**: Script automatically removes temporary files
+- **Archive Security**: Protect downloaded archives containing sensitive analysis data
+
+## Related Scripts
+
+- `mobsf.bat`: Alternative mobile security framework
+- `androbugs_framework.bat`: Another APK security scanner
+- `apktool_decode_local.bat`: Manual APK decompilation for code review

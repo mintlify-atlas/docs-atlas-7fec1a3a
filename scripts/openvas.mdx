@@ -1,0 +1,300 @@
+---
+title: OpenVAS Scripts
+description: OpenVAS/GVM vulnerability scanning scripts for local and remote execution
+---
+
+## Overview
+
+The OpenVAS scripts automate vulnerability scanning using OpenVAS/Greenbone Vulnerability Manager (GVM) via the OMP (OpenVAS Management Protocol) API. Scripts support both local Windows execution and remote Linux scanning.
+
+## openvas_scan.bat
+
+Launches OpenVAS vulnerability scans on Windows using the OMP protocol.
+
+### Parameters
+
+<ParamField path="Proyecto" type="string" required>
+  Project name for the scan
+</ParamField>
+
+<ParamField path="IP" type="string" required>
+  Target IP addresses or ranges
+</ParamField>
+
+<ParamField path="Server" type="string" required>
+  OpenVAS server hostname or IP
+</ParamField>
+
+<ParamField path="Port" type="string" required>
+  OpenVAS manager port (typically 9390)
+</ParamField>
+
+<ParamField path="Username" type="string" required>
+  OpenVAS authentication username
+</ParamField>
+
+<ParamField path="Password" type="string" required>
+  OpenVAS authentication password
+</ParamField>
+
+<ParamField path="ScanConfig" type="string" required>
+  Scan configuration UUID
+</ParamField>
+
+<ParamField path="FormatID" type="string" required>
+  Report format UUID
+</ParamField>
+
+<ParamField path="Documentacion" type="string" required>
+  Output directory for reports
+</ParamField>
+
+<ParamField path="Timestamp" type="string" required>
+  Timestamp for unique file naming
+</ParamField>
+
+### Usage
+
+```batch
+openvas_scan.bat "MyProject" "192.168.1.100" "openvas.local" "9390" "admin" "password" "daba56c8-73ec-11df-a475-002264764cea" "a994b278-1f62-11e1-96ac-406186ea4fc5" "C:\Reports" "20240315_143000"
+```
+
+### Workflow
+
+1. **Create Target** - Defines scan target with IP and port configuration
+2. **Create Task** - Associates target with scan configuration
+3. **Start Task** - Launches the scan
+4. **Monitor Progress** - Polls status every 60 seconds
+5. **Generate Report** - Retrieves report in specified format
+6. **Decode Report** - Decodes base64-encoded report data
+7. **Cleanup** - Removes temporary files
+
+### OMP Protocol Implementation
+
+The script uses `omp_cracked.exe` to communicate via OMP XML protocol.
+
+**Create Target:**
+```xml
+<create_target>
+  <name>"ProjectName_Timestamp"</name>
+  <hosts>192.168.1.100</hosts>
+  <alive_tests>Consider Alive</alive_tests>
+  <port_range>T:1-65535,U:7,9,13,17,19,21,37,53,67-69,98,111,...</port_range>
+</create_target>
+```
+
+**Create Task:**
+```xml
+<create_task>
+  <name>"ProjectName_Timestamp"</name>
+  <config id="SCAN_CONFIG_UUID"></config>
+  <target id="TARGET_ID"></target>
+</create_task>
+```
+
+**Start Task:**
+```xml
+<start_task task_id="TASK_ID"></start_task>
+```
+
+**Monitor Status:**
+```xml
+<get_tasks task_id="TASK_ID"></get_tasks>
+```
+
+**Get Report:**
+```xml
+<get_reports 
+  report_id="REPORT_ID" 
+  filter="autofp=0 apply_overrides=1 notes=1 overrides=1 result_hosts_only=1 sort-reverse=severity levels=hml min_qod=70" 
+  format_id="FORMAT_ID"/>
+```
+
+### Port Configuration
+
+The script scans comprehensive port ranges:
+
+- **TCP:** 1-65535
+- **UDP:** Common service ports (DNS, DHCP, SNMP, NTP, etc.)
+
+Full UDP port list includes: 7, 9, 13, 17, 19, 21, 37, 53, 67-69, 98, 111, 121, 123, 135, 137-138, 161, 177, 371, 389, 407, 445, 456, 464, 500, 512, 514, 517-518, 520, 555, 635, 666, 858, 1001, 1010-1011, 1015, 1024-1049, 1051-1055, 1170, 1194, 1243, 1245, 1434, 1492, 1600, 1604, 1645, 1701, 1807, 1812, 1900, 1978, 1981, 1999, 2001-2002, 2023, 2049, 2115, 2140, 2801, 2967, 3024, 3129, 3150, 3283, 3527, 3700, 3801, 4000, 4092, 4156, 4569, 4590, 4781, 5000-5001, 5036, 5060, 5321, 5400-5402, 5503, 5569, 5632, 5742, 6051, 6073, 6502, 6670, 6771, 6912, 6969, 7000, 7111, 7222, 7300-7301, 7306-7308, 7778, 7789, 7938, 9872-9875, 9989, 10067, 10167, 11000, 11223, 12223, 12345-12346, 12361-12362, 15253, 15345, 16969, 17185, 20001, 20034, 21544, 21862, 22222, 23456, 26274, 26409, 27444, 30029, 31335, 31337-31339, 31666, 31785, 31789, 31791-31792, 32771, 33333, 34324, 40412, 40421-40423, 40426, 47262, 50505, 50766, 51100-51101, 51109, 53001, 54321, 61466
+
+### Report Filters
+
+Reports are filtered with:
+- **autofp=0** - No automatic false positive detection
+- **apply_overrides=1** - Apply user overrides
+- **notes=1** - Include notes
+- **overrides=1** - Include overrides
+- **result_hosts_only=1** - Only hosts with results
+- **sort-reverse=severity** - Sort by severity (high to low)
+- **levels=hml** - High, Medium, Low severities
+- **min_qod=70** - Minimum Quality of Detection 70%
+
+### Error Handling
+
+**Service Connection:**
+```batch
+findstr.exe /C:"OK" output.txt
+if %ERRORLEVEL% NEQ 0 (
+  echo Revise Usuario/Contraseña o levante el servicio
+  echo service openvas-scanner restart
+  echo service openvas-manager restart
+  echo service greenbone-security-assistant restart
+)
+```
+
+**Status Checks:**
+- **Internal Error** - Exits with error
+- **Stopped** - Exits scan
+- **Done** - Proceeds to report generation
+
+### Output Files
+
+- `OpenvasReport - {Timestamp}.html` - Decoded HTML report
+
+The report automatically opens after completion.
+
+---
+
+## openvas_scan_remote.sh
+
+Executes OpenVAS scans on remote Linux servers.
+
+### Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `Proyecto` | Project name |
+| `IP` | Target IP addresses |
+| `Username` | OpenVAS username |
+| `Password` | OpenVAS password |
+| `OpenvasmdIP` | OpenVAS manager IP (auto-detected if empty) |
+| `OpenvasmdPort` | OpenVAS manager port (auto-detected if empty) |
+| `ScanConfig` | Scan configuration UUID |
+| `FormatID` | Report format UUID |
+| `Timestamp` | Unique timestamp |
+
+### Usage
+
+<Tabs>
+  <Tab title="Linux">
+    ```bash
+    ./openvas_scan_remote.sh "MyProject" "192.168.1.100" "admin" "password" "" "" "daba56c8-73ec-11df-a475-002264764cea" "a994b278-1f62-11e1-96ac-406186ea4fc5" "20240315_143000"
+    ```
+  </Tab>
+</Tabs>
+
+### Prerequisites
+
+The script validates required tools:
+
+```bash
+which xmlstarlet >/dev/null
+if [ $? -ne 0 ] ; then
+  echo "Falta el programa xmlstarlet. Instalelo primero"
+  exit
+fi
+
+which omp >/dev/null
+if [ $? -ne 0 ] ; then
+  echo "Falta el programa openvas-client(omp). Instalelo primero"
+  exit
+fi
+```
+
+**Required packages:**
+- `xmlstarlet` - XML parsing
+- `openvas-client` - OMP client (omp command)
+- `openssl` - Base64 decoding
+
+### Service Auto-Detection
+
+If server/port parameters are empty, the script auto-detects using `netstat` or `ss`:
+
+```bash
+OpenvasmdIP=$(netstat -anp | grep openvasmd | grep LISTEN | grep -oE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' | grep -v 0.0.0.0)
+OpenvasmdPort=$(netstat -ltp | grep openvasmd | grep LISTEN | grep -oE ':[0-9]{1,6}' | cut -d":" -f2)
+```
+
+Defaults to `127.0.0.1:9390` if detection fails.
+
+### Scanner Initialization Wait
+
+The script waits for scanner initialization:
+
+```bash
+openvassd_status=$(ps ax | grep "openvassd: Initializing" | grep -v grep)
+while [ ! -z $openvassd_status ] ; do
+  echo $openvassd_status
+  ping -c 61 127.0.0.1 > /dev/null
+done
+```
+
+### Implementation Differences
+
+<Tabs>
+  <Tab title="Windows (BAT)">
+    **Command:**
+    ```batch
+    omp_cracked.exe --host=%Server% --port=%Port% \
+      --username=%Username% --password=%Password% \
+      --xml="<create_target>...</create_target>"
+    ```
+    
+    **XML Parsing:**
+    ```batch
+    type output.txt | xml.exe sel -t -m "create_target_response" -v "@id"
+    ```
+    
+    **Base64 Decode:**
+    ```batch
+    openssl.exe -in input.txt enc -base64 -d -out output.html
+    ```
+  </Tab>
+  
+  <Tab title="Linux (SH)">
+    **Command:**
+    ```bash
+    omp --host=$Server --port=$Port \
+      --username=$Username --password=$Password \
+      --xml="<create_target>...</create_target>"
+    ```
+    
+    **XML Parsing:**
+    ```bash
+    xmlstarlet sel -t -m "create_target_response" -v "@id" input.txt
+    ```
+    
+    **Base64 Decode:**
+    ```bash
+    cat input.txt | openssl enc -base64 -d -A > output.html
+    ```
+  </Tab>
+</Tabs>
+
+### Output Location
+
+- **Windows:** `%Documentacion%\OpenvasReport - {Timestamp}.html`
+- **Linux:** `/tmp/OpenvasReport - {Timestamp}.html`
+
+### Cleanup
+
+Both scripts remove temporary files:
+
+```bash
+rm "/tmp/openvas_scan_target_$Timestamp.txt"
+rm "/tmp/openvas_scan_target_id_$Timestamp.txt"
+rm "/tmp/openvas_scan_task_$Timestamp.txt"
+rm "/tmp/openvas_scan_task_id_$Timestamp.txt"
+rm "/tmp/openvas_scan_report_$Timestamp.txt"
+rm "/tmp/openvas_scan_report_id_$Timestamp.txt"
+rm "/tmp/openvas_scan_status_scan_$Timestamp.txt"
+rm "/tmp/openvas_scan_status_report_$Timestamp.txt"
+rm "/tmp/openvas_scan_report_response_$Timestamp.txt"
+rm "/tmp/openvas_scan_b64_report_$Timestamp.txt"
+```
+
+### API Documentation
+
+OMP protocol documentation: http://docs.greenbone.net/API/OMP/omp.html

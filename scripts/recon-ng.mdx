@@ -1,0 +1,221 @@
+---
+title: 'Recon-ng Remote Scanner'
+description: 'OSINT reconnaissance script using Recon-ng framework for domain enumeration and information gathering'
+---
+
+## Overview
+
+The `recon_ng_remote.bat` script automates OSINT (Open Source Intelligence) reconnaissance using the Recon-ng framework. It performs comprehensive domain enumeration, subdomain discovery, and host information gathering on remote Linux systems.
+
+## Prerequisites
+
+- Remote Linux system with SSH access
+- Recon-ng installed on remote system
+- PuTTY tools (plink.exe, pscp.exe) on Windows
+- Valid API keys for various services (optional but recommended)
+
+## Usage
+
+```batch
+recon_ng_remote.bat <Proyecto> <Domains> <Documentacion> <Timestamp> <Server> <Username> <Password>
+```
+
+### Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `Proyecto` | Project name (workspace name in Recon-ng) |
+| `Domains` | Comma-separated list of domains to scan (e.g., "example.com,test.com") |
+| `Documentacion` | Output directory path for reports |
+| `Timestamp` | Timestamp identifier for report files |
+| `Server` | Remote server IP or hostname |
+| `Username` | SSH username |
+| `Password` | SSH password |
+
+### Example
+
+```batch
+recon_ng_remote.bat "MyProject" "example.com,test.com" "C:\Reports" "20240315" "192.168.1.100" "root" "password"
+```
+
+## API Keys Configuration
+
+The script supports multiple API keys for enhanced reconnaissance. Edit the script to configure:
+
+```batch
+set google_api=YOUR_API_KEY
+set github_api=YOUR_API_KEY
+set shodan_api=YOUR_API_KEY
+set bing_api=YOUR_API_KEY
+set builtwith_api=YOUR_API_KEY
+set fullcontact_api=YOUR_API_KEY
+set virustotal_api=YOUR_API_KEY
+set twitter_api=YOUR_API_KEY
+set twitter_secret=YOUR_SECRET
+set censysio_id=YOUR_ID
+set censysio_secret=YOUR_SECRET
+```
+
+## Recon-ng Modules Used
+
+### Domain-to-Hosts Modules
+
+- **netcraft** - Netcraft domain reconnaissance
+- **bing_domain_api** - Bing domain API search
+- **bing_domain_web** - Bing web domain search
+- **builtwith** - BuiltWith technology profiler
+- **brute_hosts** - DNS brute force enumeration
+- **ssl_san** - SSL certificate SAN extraction
+- **vpnhunter** - VPN endpoint discovery
+- **certificate_transparency** - Certificate transparency logs
+- **google_site_web** - Google site search
+- **hackertarget** - HackerTarget API queries
+- **mx_spf_ip** - MX and SPF record analysis
+- **shodan_hostname** - Shodan hostname lookup
+- **threatcrowd** - ThreatCrowd domain intelligence
+
+### Netblocks-to-Hosts Modules
+
+- **reverse_resolve** - Reverse DNS resolution
+- **shodan_net** - Shodan network search
+
+### Hosts-to-Hosts Modules
+
+- **reverse_resolve** - Reverse DNS on discovered hosts
+- **resolve** - Forward DNS resolution
+- **bing_ip** - Bing IP address search
+- **freegeoip** - IP geolocation data
+- **ipinfodb** - IP information database
+- **ssltools** - SSL certificate analysis
+
+### Reporting Module
+
+- **reporting/html** - HTML report generation
+
+## Generated Reports
+
+The script generates four output files:
+
+1. **HTML Report** - `recon-ngReport - [Timestamp].html`
+   - Comprehensive HTML report with all findings
+   - Includes domains, hosts, IP addresses, and metadata
+
+2. **Networks Report** - `recon-ngReport-Networks - [Timestamp].txt`
+   - List of discovered netblocks
+
+3. **Subdomains Report** - `recon-ngReport-Subdomains - [Timestamp].txt`
+   - List of discovered subdomains with IP addresses
+
+4. **IP Addresses Report** - `recon-ngReport-IP - [Timestamp].txt`
+   - Unique IP addresses discovered
+
+## Workflow
+
+1. **Workspace Creation** - Creates a dedicated Recon-ng workspace for the project
+2. **Domain Addition** - Adds target domains to the workspace
+3. **API Key Configuration** - Loads API keys for enhanced reconnaissance
+4. **Module Execution** - Runs reconnaissance modules sequentially:
+   - Domain enumeration
+   - Subdomain discovery
+   - Host resolution
+   - IP geolocation
+   - SSL certificate analysis
+5. **Data Export** - Extracts data using SQL queries
+6. **Report Generation** - Creates HTML and text reports
+7. **File Transfer** - Downloads reports to local documentation directory
+8. **Cleanup** - Removes temporary files from remote system
+
+## Installation
+
+### Remote System Setup
+
+Install Recon-ng on the remote Linux system:
+
+```bash
+git clone https://bitbucket.org/LaNMaSteR53/recon-ng.git
+cd recon-ng
+pip install -r REQUIREMENTS
+```
+
+### Additional Modules
+
+For extended functionality, install additional Recon-ng modules:
+
+```bash
+# From https://github.com/scumsec/Recon-ng-modules
+```
+
+## Script Execution Details
+
+<CodeGroup>
+
+```batch Windows
+@echo off
+setlocal
+set Proyecto=%1
+set Domains=%2
+set Documentacion=%3
+set Timestamp=%4
+set Server=%5
+set Username=%6
+set Password=%7
+```
+
+```bash Remote Commands
+# Create workspace
+workspaces add MyProject
+add companies MyProject
+workspaces select MyProject
+
+# Add domains
+add domains example.com
+
+# Load and run modules
+load recon/domains-hosts/netcraft
+run
+
+# Configure API keys
+keys add bing_api YOUR_KEY
+keys add shodan_api YOUR_KEY
+
+# Generate reports
+load reporting/html
+set CREATOR SVM
+set CUSTOMER MyProject
+set FILENAME /tmp/recon-ngReport.html
+run
+```
+
+</CodeGroup>
+
+## Output Example
+
+```text
+[*] Networks Report:
+192.168.1.0/24
+10.0.0.0/8
+
+[*] Subdomains Report:
+www.example.com | 93.184.216.34
+mail.example.com | 93.184.216.35
+api.example.com | 93.184.216.36
+
+[*] IP Addresses:
+93.184.216.34
+93.184.216.35
+93.184.216.36
+```
+
+## References
+
+- [Recon-ng Documentation](https://github.com/lanmaster53/recon-ng)
+- [OSINT Tutorial Video](https://www.youtube.com/watch?v=p2gpjTZgOa0)
+- [Subdomain Enumeration Tools](http://10degres.net/subdomain-enumeration/)
+
+## Notes
+
+- The script uses PuTTY's plink.exe for SSH communication
+- All temporary files are created in `/tmp/` on the remote system
+- Files are converted to DOS format using `unix2dos` before transfer
+- The script automatically detects Recon-ng installation path
+- Execution requires proper SSH credentials and network connectivity
